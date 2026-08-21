@@ -17,32 +17,24 @@ from datetime import datetime, timezone
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 
-# Change this when you change the app.
 APP_NAME = "My First Substrait App"
 
-app = FastAPI(title=APP_NAME, docs_url="/api/docs")  # keep openapi_url at its default
-                                                     # /openapi.json — the platform falls
-                                                     # back to harvesting it at runtime
+app = FastAPI(title=APP_NAME, docs_url="/api/docs")
 
 
-# ── Required by Substrait ──────────────────────────────────────────────────────
 @app.get("/health", tags=["system"])
 def health():
-    """Substrait calls this to decide whether the app started correctly."""
     return {"status": "ok"}
 
 
-# ── Your API goes here. Every route must start with /api ───────────────────────
 @app.get("/api/info")
 def info():
-    """A tiny endpoint so the page can prove the backend is really running."""
     return {
         "app": APP_NAME,
         "server_time": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
     }
 
 
-# ── The web page ───────────────────────────────────────────────────────────────
 PAGE = """<!doctype html>
 <html lang="en">
 <head>
@@ -53,46 +45,124 @@ PAGE = """<!doctype html>
   :root { color-scheme: light; }
   * { box-sizing: border-box; }
   body {
-    margin: 0; min-height: 100vh; display: grid; place-items: center;
+    margin: 0;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
     font: 16px/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    background: #f6f7f9; color: #1c1e21; padding: 24px;
+    background: linear-gradient(180deg, #f4f7fb 0%, #eef2f7 100%);
+    color: #172033;
+    padding: 32px 24px;
+  }
+  .layout {
+    width: 100%;
+    max-width: 640px;
+  }
+  .hero {
+    margin-bottom: 18px;
+    text-align: left;
+  }
+  .eyebrow {
+    display: inline-block;
+    margin-bottom: 10px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgba(23, 32, 51, 0.06);
+    color: #41506a;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .hero h1 {
+    margin: 0;
+    font-size: clamp(2.2rem, 5vw, 3.4rem);
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+    color: #0f172a;
+  }
+  .hero p {
+    margin: 12px 0 0;
+    max-width: 520px;
+    color: #526076;
+    font-size: 16px;
   }
   .card {
-    background: #fff; border: 1px solid #e3e6ea; border-radius: 14px;
-    padding: 40px; max-width: 560px; width: 100%;
-    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    background: rgba(255, 255, 255, 0.82);
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-radius: 22px;
+    padding: 36px;
+    width: 100%;
+    box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+    backdrop-filter: blur(14px);
   }
-  h1 { margin: 0 0 8px; font-size: 26px; letter-spacing: -.01em; }
-  p  { margin: 0 0 20px; color: #5c6169; }
+  .card h2 {
+    margin: 0 0 8px;
+    font-size: 24px;
+    letter-spacing: -0.02em;
+    color: #0f172a;
+  }
+  .card p {
+    margin: 0 0 20px;
+    color: #5c6779;
+  }
   .pill {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 7px 14px; border-radius: 999px; font-size: 14px; font-weight: 500;
-    background: #f0f1f3; color: #5c6169;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    background: #eef2f7;
+    color: #526076;
   }
-  .pill.ok   { background: #e7f6ec; color: #10682f; }
+  .pill.ok { background: #e7f6ec; color: #10682f; }
   .pill.fail { background: #fdecec; color: #9a1f1f; }
-  .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
-  .next { margin-top: 28px; padding-top: 20px; border-top: 1px solid #eceef1;
-          font-size: 14px; color: #5c6169; }
-  code { background: #f0f1f3; padding: 2px 6px; border-radius: 5px; font-size: 13px; }
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  .next {
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(148, 163, 184, 0.22);
+    font-size: 14px;
+    color: #5c6779;
+  }
+  code {
+    background: #eef2f7;
+    padding: 2px 6px;
+    border-radius: 5px;
+    font-size: 13px;
+  }
 </style>
 </head>
 <body>
-  <main class="card">
-    <h1>__APP_NAME__</h1>
-    <p>Your app is deployed and running on Substrait.</p>
+  <div class="layout">
+    <section class="hero">
+      <span class="eyebrow">Welcome</span>
+      <h1>Hello World</h1>
+      <p>A clean, modern starting point for your Substrait application.</p>
+    </section>
 
-    <span class="pill" id="status"><span class="dot"></span> Checking the backend…</span>
+    <main class="card">
+      <h2>__APP_NAME__</h2>
+      <p>Your app is deployed and running on Substrait.</p>
 
-    <div class="next">
-      This page is served by <code>backend/main.py</code>.
-      Tell your AI assistant what you want to build and it will edit that file,
-      then deploy again to see your changes live.
-    </div>
-  </main>
+      <span class="pill" id="status"><span class="dot"></span> Checking the backend…</span>
+
+      <div class="next">
+        This page is served by <code>backend/main.py</code>.
+        Tell your AI assistant what you want to build and it will edit that file,
+        then deploy again to see your changes live.
+      </div>
+    </main>
+  </div>
 
 <script>
-  // Calls this app's own API on the same address — no URL to configure.
   fetch("/api/info")
     .then(r => r.ok ? r.json() : Promise.reject(r.status))
     .then(d => {
