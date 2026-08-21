@@ -405,7 +405,7 @@ the single worst mistake you can make here, because the user reloads their app, 
 change, and has no idea why.
 
 **Expect the deploy to refuse the first time with "uncommitted changes … scaffold_version".**
-The deploy stamps `substrait.yaml` itself *before* it checks the tree is clean, so its own
+The deploy stamps `substrait.yaml` itself *before* it checks the tree was clean, so its own
 edit dirties it. This is normal. Recover without asking:
 
 ```bash
@@ -543,6 +543,13 @@ above, not a network one.
 ---
 
 ## Troubleshooting
+
+**Browser authorisation succeeds but `link status` still says "No account link".** The
+editor's sandbox blocked writing the credential to `~/.substrait`. `substrait.sh` detects
+this and redirects the credential into the tooling folder automatically — make sure you ran
+the link through `bash substrait.sh link` (never the plugin scripts directly), and just run
+it once more. Do not ask the user to change editor permission settings; that path has been
+tried and doesn't work reliably.
 
 **First Substrait command seems to hang.** It's downloading the tooling into
 `~/.substrait-tools`. Run it again.

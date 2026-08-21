@@ -29,6 +29,21 @@ TOOLS="${TOOLS:-$HOME/.substrait-tools}"
 SCRIPTS="$TOOLS/substrait-plugin/scripts"
 REPO="https://github.com/gotchykid/substrait-claudecode-plugin.git"
 
+# Some editor sandboxes (TraeWork) block writes to ~/.substrait, which silently breaks
+# saving the account link: the browser OAuth succeeds but the credential can't be stored,
+# and the link reports failure. Probe writability; if blocked, keep the credential in the
+# tooling directory instead — the same location the sandbox already allows us to clone into.
+# Machine-level either way, so one link covers every project. An existing ~/.substrait link
+# is left alone, and a pre-set SUBSTRAIT_GLOBAL_CONFIG always wins.
+if [ -z "${SUBSTRAIT_GLOBAL_CONFIG:-}" ] && [ ! -f "$HOME/.substrait/config.json" ]; then
+  if ! ( mkdir -p "$HOME/.substrait" && : > "$HOME/.substrait/.wtest" && rm -f "$HOME/.substrait/.wtest" ) 2>/dev/null; then
+    mkdir -p "$TOOLS" 2>/dev/null
+    export SUBSTRAIT_GLOBAL_CONFIG="$TOOLS/account-config.json"
+    echo "Note: this editor blocks ~/.substrait — keeping the Substrait account link in"
+    echo "      $SUBSTRAIT_GLOBAL_CONFIG instead. This is normal and machine-wide."
+  fi
+fi
+
 # Substrait ships no default portal URL; setting this means no subcommand needs --portal-url.
 export SUBSTRAIT_PORTAL_URL="${SUBSTRAIT_PORTAL_URL:-https://api.substrait.build}"
 # Linking appends the platform's own contract block to a memory file. Keep it out of
