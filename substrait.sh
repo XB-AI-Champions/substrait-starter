@@ -7,6 +7,7 @@
 #   bash substrait.sh link      authorise this machine (opens your browser)
 #   bash substrait.sh deploy    build and ship, streaming the log
 #   bash substrait.sh env ...   manage the app's env vars and secrets
+#   bash substrait.sh library   browse the internal API catalogue (needs the account link)
 set -uo pipefail
 
 # ── Always run from the project root, whatever the caller's working directory ─────
@@ -27,7 +28,7 @@ if [ -z "$TOOLS" ] && [ -n "${LOCALAPPDATA:-}" ] && command -v cygpath >/dev/nul
 fi
 TOOLS="${TOOLS:-$HOME/.substrait-tools}"
 SCRIPTS="$TOOLS/substrait-plugin/scripts"
-REPO="https://github.com/gotchykid/substrait-claudecode-plugin.git"
+REPO="https://github.com/substrait-build/substrait-claudecode-plugin.git"
 
 # Some editor sandboxes (TraeWork) block writes to ~/.substrait, which silently breaks
 # saving the account link: the browser OAuth succeeds but the credential can't be stored,
@@ -75,6 +76,12 @@ fetch_tools() {
     fi
     echo "Tooling ready."
   else
+    # The plugin moved from the developer's personal account to substrait-build.
+    # A clone made before the move still pulls from the old URL; re-point it so
+    # refreshes keep tracking the maintained repo.
+    if [ "$(git -C "$TOOLS" remote get-url origin 2>/dev/null)" != "$REPO" ]; then
+      git -C "$TOOLS" remote set-url origin "$REPO" 2>/dev/null || true
+    fi
     git -C "$TOOLS" pull --ff-only --quiet 2>/dev/null \
       || git -C "$TOOLS" fetch --depth 1 -q origin 2>/dev/null \
       && git -C "$TOOLS" reset --hard -q '@{u}' 2>/dev/null || true
@@ -203,5 +210,6 @@ case "$cmd" in
           bash "$SCRIPTS/substrait-link.sh" "$@" ;;
   deploy) fetch_tools; bash "$SCRIPTS/substrait-deploy.sh" --watch "$@" ;;
   env)    fetch_tools; bash "$SCRIPTS/substrait-env.sh" "$@" ;;
-  *) echo "usage: bash substrait.sh {doctor|check|link|deploy|env}" >&2; exit 2 ;;
+  library) fetch_tools; bash "$SCRIPTS/substrait-library.sh" "$@" ;;
+  *) echo "usage: bash substrait.sh {doctor|check|link|deploy|env|library}" >&2; exit 2 ;;
 esac
