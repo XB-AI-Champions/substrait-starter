@@ -239,6 +239,21 @@ substitute SQLite).
 - Never write "temporary" data to files as a workaround, and never skip features in
   local mode — the point is that the user can try everything before it goes live.
 
+### Where logging goes
+
+**All logging goes to stdout** — `print` or Python's `logging` to the console — **never to
+a file.** The container's filesystem is wiped on every restart and redeploy, and nothing
+can read a file inside it, so a log file is silently useless.
+
+Know where stdout is actually visible: **locally**, live in the dev-server window while
+the user tests — that is where logging earns its keep. **Deployed, it is NOT visible**:
+the portal has no logs view (verified — the app page has no Logs tab), so never tell the
+user to "check the logs" on a live app. This makes readable error responses mandatory,
+not optional (see the `DATABASE_URL` note above): when something fails at the live URL,
+the page itself must say what went wrong in plain language, because the page is the only
+surface anyone can see. Diagnose live problems by reproducing them locally, where the
+logs exist.
+
 ---
 
 ## Adding Redis, Kafka, vector search or file storage
