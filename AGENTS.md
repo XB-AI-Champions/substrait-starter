@@ -209,6 +209,13 @@ With `oceanbase` you are writing **MySQL**, not PostgreSQL: no `SERIAL`, no `RET
 driver. Never substitute SQLite, not even for local testing — different driver, different
 placeholders, different dialect.
 
+**Parse `DATABASE_URL` with percent-decoding.** The injected URL percent-encodes special
+characters in the username and the password (e.g. `%40` for `@`). Parse it with a real URL
+parser and `unquote` BOTH the username and the password — a hand-rolled split fails at
+runtime with "Access denied", which looks like a platform problem and isn't. While you're
+there: give the app an exception handler that returns a readable error message instead of a
+blank 500, so runtime failures can be diagnosed from the page.
+
 **Two DDL shapes wedge the app permanently. Both are rejected at validation, and if one
 ever lands it leaves a failed row in Flyway history that makes *every later deploy* fail:**
 
@@ -589,6 +596,21 @@ unset — same rule as *Pushing to GitHub* below).
 Take the username from the credential you are about to use, not from guesswork. If the
 credential's username and `github.user` disagree, stop and ask which account is intended.
 
+**If the user chooses an account that has no cached credential on this machine**, get one
+— two ways, in order:
+
+1. **Git's own sign-in (preferred — nothing to install).** Put the chosen username in the
+   remote URL (*Pushing to GitHub*, step 3) and run a remote operation — Git Credential
+   Manager shows a sign-in window for that account, once (step 6 there). After the
+   sign-in, re-run the credential-fill creation, adding `username=USERNAME` as a third
+   line of the `git credential fill` input so it selects that account's credential.
+2. **gh.** `gh auth login` for that account (install gh first if needed — see the
+   fallback list below), then `gh repo create REPO --private`.
+
+If both fail, have the user create the repo at github.com/new (private, no README) and
+continue with the push runbook. Whichever path you take, keep the chosen username in the
+remote URL so the two accounts never mix.
+
 **Create it with the cached credential** (no new sign-in, no gh needed) — run through
 Git Bash like every other bash snippet here:
 
@@ -607,9 +629,12 @@ Rules for this flow:
 - **Never print, echo, or paste the token anywhere** — not in the conversation, not in a
   file, not in an error report. Use it and discard the variables.
 - A **401/403 or an empty token** means the cached credential can't create repos on this
-  machine. Fall back in order: (1) `gh repo create REPO --private` if `gh auth status`
-  shows a logged-in account; (2) otherwise walk the user through creating it at
-  github.com/new (private, no README) — the only case where they open GitHub.
+  machine. Fall back in order: (1) `gh repo create REPO --private` — if gh isn't
+  installed, install it yourself (`winget install --scope user GitHub.cli`, no admin
+  needed) and sign in with `gh auth login` (device-code flow: relay the code and URL to
+  the user as text, same rules as the Substrait link flow); (2) only if gh also fails,
+  walk the user through creating it at github.com/new (private, no README) — the one
+  case where they open GitHub.
 - A **422 "name already exists"** means the repo is already there — skip creation and
   continue to the push runbook.
 
