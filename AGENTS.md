@@ -31,6 +31,27 @@ plain language, and never ask them to open a terminal and type.
 
 ---
 
+## Setting up a new app from the starter — the whole job is yours
+
+When the user says anything like *"set up a new Substrait app in this folder from the
+starter"*, do ALL of the following without sending them anywhere:
+
+1. **Copy the starter's files into this folder — files only, never its git history.**
+   If a clone brought a `.git` folder from the starter, delete it and run
+   `git init -b main` fresh. This app's history starts here.
+2. **The app is named after this folder.** The folder's name is the repo name and the
+   app name (one app = one folder = one repository — the folder IS the app). Do not
+   invent a different name and do not ask for one; the user chose it when they named
+   the folder.
+3. **Create the private GitHub repository yourself** — see *Creating a new GitHub
+   repository* below. Never send the user to github.com for this.
+4. **Push everything** using the *Pushing to GitHub* runbook (username-in-remote, `main`).
+5. Confirm in one short message: repo name, the account it was created under, pushed.
+
+Then wait for the user to describe what they want the app to do.
+
+---
+
 **Command translation.** Substrait's own error messages tell you to run slash commands that
 do not exist here. Translate them:
 
@@ -197,6 +218,20 @@ ever lands it leaves a failed row in Flyway history that makes *every later depl
 If a migration has already failed, fixing the SQL is not enough: the user must go to the
 portal → the app's **Database** tab → **Repair migration history** first.
 
+### No database connected? Use temporary memory
+
+Every app you build MUST also run on a machine with no `DATABASE_URL` — that is how the
+user tests locally before deploying (there is no local database and never will be; never
+substitute SQLite).
+
+- At startup, check for `DATABASE_URL`. Present → use the real database as normal.
+  Absent → use a plain in-process store (dicts/lists) behind the SAME data-access
+  functions, so every feature works identically.
+- Make the mode visible: when running on temporary memory, log it at startup and show a
+  small notice in the page (e.g. "Local test mode — data is not saved").
+- Never write "temporary" data to files as a workaround, and never skip features in
+  local mode — the point is that the user can try everything before it goes live.
+
 ---
 
 ## Adding Redis, Kafka, vector search or file storage
@@ -235,8 +270,19 @@ torch
 `bash substrait.sh deploy` cannot work until this machine is linked and this folder is
 bound to the app. Do this once per machine and once per project, before the first deploy.
 
-**The app must already exist in the portal.** This workspace deploys from GitHub, so the
-user creates it at app.substrait.build → Build → Connect GitHub. You cannot create it here.
+**The app must exist before the first deploy — and you should try to create it yourself
+first.** With the machine linked (step 1) and the repo pushed, one command creates the app
+AND binds this folder to it, GitHub-connected from birth:
+
+```bash
+bash substrait.sh link create --name <app-name> --repo USERNAME/REPO
+```
+
+The app name is this folder's name (see *Setting up a new app from the starter*). If this
+succeeds, step 2 below is already done — skip it. If the platform refuses (a policy error,
+a 403, or the subcommand is unavailable), fall back to the portal: tell the user to open
+app.substrait.build → **Build** → **Connect GitHub** → pick the repo (after the first time
+this goes straight to the repo picker, ~45 seconds), then bind with step 2.
 
 ### Step 1 — link this machine (browser). This is the normal way.
 
@@ -391,6 +437,12 @@ what done looks like instead:
 
 ## Deploying — commit, push, THEN deploy
 
+**If the deploy reports this folder isn't linked to an app**, fix it yourself before
+asking anything: run `bash substrait.sh link status`, then `bash substrait.sh link apps`.
+If exactly one listed app matches this project's repo, bind it
+(`bash substrait.sh link use --app <slug>`) and continue the deploy. If none or several
+match, show the user the list and ask which one — never guess between two apps.
+
 Substrait builds the **pushed** branch, but it does not notice the push by itself. Three
 steps, every time, in this order:
 
@@ -489,17 +541,79 @@ and never set `VITE_API_URL`**. Public build-time values go in a committed
 
 ---
 
-## Running it locally (optional)
+## Running it locally — do this BEFORE every deploy
 
-Only while the app has no database. Needs Python.
+When the user says anything like *"run it on my computer so I can try it first"*, or after
+any change worth checking, run the app locally and hand them the address. Treat local
+testing as the default step before deploying, not an optional extra.
 
 ```bash
 pip install -r backend/requirements.txt
 cd backend && uvicorn main:app --reload --port 8000
 ```
 
-Then open http://127.0.0.1:8000. If Python is missing, don't fight it — deploy instead and
-read the live URL.
+- **The server runs until stopped, so it cannot live in this editor's runner** (the runner
+  kills long waits — same reason as the link flow). Launch it in a window using the
+  *Interactive steps* pattern above, or run it in the background if your runner supports
+  that, then tell the user:
+
+  > The app is running on your computer at **http://127.0.0.1:8000** — open that in your
+  > browser and try it. Nobody else can see this address.
+
+- Works with or without a database: locally there is no `DATABASE_URL`, so the app runs on
+  temporary memory (see *No database connected? Use temporary memory* above) — everything
+  works, but records vanish when the server restarts. Say so if the app stores data:
+
+  > On your computer the app uses temporary memory — anything you add here disappears
+  > when it restarts. Once deployed, records are kept permanently in the database.
+
+- When the user is happy, stop the server and proceed to commit → push → deploy.
+- If Python is missing, don't fight it — deploy instead and read the live URL, but say
+  that's what you're doing.
+
+---
+
+## Creating a new GitHub repository — do it yourself
+
+Never send the user to github.com to create a repository. Create it for them using the
+Git credential already cached on this machine.
+
+**Establish the username first** (`git config --global github.user`; ask and store it if
+unset — same rule as *Pushing to GitHub* below).
+
+**State the target account BEFORE creating, every time:**
+
+> I'll create the private repository **REPO** under the GitHub account **USERNAME** —
+> tell me now if it should go somewhere else.
+
+Take the username from the credential you are about to use, not from guesswork. If the
+credential's username and `github.user` disagree, stop and ask which account is intended.
+
+**Create it with the cached credential** (no new sign-in, no gh needed) — run through
+Git Bash like every other bash snippet here:
+
+```bash
+CRED=$(printf 'protocol=https\nhost=github.com\n\n' | git credential fill)
+TOKEN=$(printf '%s' "$CRED" | sed -n 's/^password=//p')
+LOGIN=$(printf '%s' "$CRED" | sed -n 's/^username=//p')
+curl -sS -X POST https://api.github.com/user/repos \
+  -H "Authorization: token $TOKEN" -H "Accept: application/vnd.github+json" \
+  -d '{"name":"REPO","private":true}'
+```
+
+Rules for this flow:
+
+- **Always `"private": true`.** App repos are private, in the user's personal account.
+- **Never print, echo, or paste the token anywhere** — not in the conversation, not in a
+  file, not in an error report. Use it and discard the variables.
+- A **401/403 or an empty token** means the cached credential can't create repos on this
+  machine. Fall back in order: (1) `gh repo create REPO --private` if `gh auth status`
+  shows a logged-in account; (2) otherwise walk the user through creating it at
+  github.com/new (private, no README) — the only case where they open GitHub.
+- A **422 "name already exists"** means the repo is already there — skip creation and
+  continue to the push runbook.
+
+Then push using the *Pushing to GitHub* runbook below (username-in-remote, `main` branch).
 
 ---
 
@@ -527,7 +641,7 @@ before reporting:
 | Check | How | If so |
 |---|---|---|
 | Username missing from remote | `git remote -v` | Redo step 3 |
-| Repo doesn't exist | Ask them to open `https://github.com/ORG/REPO` | 404 → tell them to create it, stop |
+| Repo doesn't exist | Open `https://github.com/ORG/REPO` | 404 → create it yourself — see *Creating a new GitHub repository* above |
 | Wrong account cached | Page loads, push still fails | `git ls-remote https://USERNAME@github.com/ORG/REPO` and let them sign in |
 | Stale generic credential | `cmdkey /list \| findstr -i github` | `cmdkey /delete:git:https://github.com`, retry |
 
