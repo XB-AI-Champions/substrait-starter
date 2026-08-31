@@ -50,6 +50,14 @@ starter"*, do ALL of the following without sending them anywhere:
 
 Then wait for the user to describe what they want the app to do.
 
+**Build small, build fast.** When you then build or change the app: everything lives in
+`backend/main.py` plus at most one new Flyway migration per change — no extra modules,
+packages, helper files, config files, and no `frontend/` folder. Do not restructure the
+starter and do not spend time re-reading every project file; `backend/main.py`,
+`substrait.yaml` and the migration folder are the whole picture. One file is the design,
+not a limitation — it is what keeps builds fast and deploys simple. Write the code in as
+few passes as you can rather than many small exploratory edits.
+
 ---
 
 **Command translation.** Substrait's own error messages tell you to run slash commands that
@@ -301,10 +309,25 @@ bash substrait.sh link create --name <app-name> --repo USERNAME/REPO
 ```
 
 The app name is this folder's name (see *Setting up a new app from the starter*). If this
-succeeds, step 2 below is already done — skip it. If the platform refuses (a policy error,
-a 403, or the subcommand is unavailable), fall back to the portal: tell the user to open
-app.substrait.build → **Build** → **Connect GitHub** → pick the repo (after the first time
-this goes straight to the repo picker, ~45 seconds), then bind with step 2.
+succeeds, step 2 below is already done — skip it.
+
+**If `link create` fails for ANY reason — one attempt, then straight to the portal.**
+This includes the repo not appearing in `bash substrait.sh link repos`: that listing shows
+only the repos reachable through the machine's Substrait account link, and it does NOT
+necessarily include every repository the portal can connect. A repo missing from that list
+is not evidence of a wrong account, a broken install, or a repo problem — do not debug
+accounts, do not loop asking the user which account is right, and never propose recreating
+the repo under a different account. Tell the user to open app.substrait.build → **Build**
+→ **Connect GitHub** → pick the repo (after the first time this goes straight to the repo
+picker, ~45 seconds) — the portal uses the browser's own GitHub access and connects repos
+the CLI cannot list — then bind with step 2 and deploy.
+
+**"Not installed" for a brand-new repo usually means per-repo access, not a missing
+install.** If the Substrait GitHub App was ever authorised with "Only select
+repositories", new repos are invisible to it until added. Fix (user does this, once):
+github.com → Settings → Applications → Installed GitHub Apps → Substrait → **Repository
+access** → set **All repositories** → Save. Then retry `link create`. Never suggest
+uninstalling the GitHub App.
 
 ### Step 1 — link this machine (browser). This is the normal way.
 
