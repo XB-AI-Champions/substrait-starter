@@ -300,34 +300,45 @@ torch
 `bash substrait.sh deploy` cannot work until this machine is linked and this folder is
 bound to the app. Do this once per machine and once per project, before the first deploy.
 
-**The app must exist before the first deploy — and you should try to create it yourself
-first.** With the machine linked (step 1) and the repo pushed, one command creates the app
-AND binds this folder to it, GitHub-connected from birth:
+**The app must exist before the first deploy. Create it yourself — the CLI creation
+ladder, in this order.** The app name is this folder's name (see *Setting up a new app
+from the starter*). A successful create also binds this folder, so step 2 below is then
+already done.
+
+**Rung 1 — GitHub-connected from birth** (best when it works: pushes become the deploy
+source). With the machine linked (step 1) and the repo pushed:
 
 ```bash
 bash substrait.sh link create --name <app-name> --repo USERNAME/REPO
 ```
 
-The app name is this folder's name (see *Setting up a new app from the starter*). If this
-succeeds, step 2 below is already done — skip it.
+**Rung 2 — if rung 1 is refused for ANY reason, create the app WITHOUT the repo:**
 
-**If `link create` fails for ANY reason — one attempt, then straight to the portal.**
-This includes the repo not appearing in `bash substrait.sh link repos`: that listing shows
-only the repos reachable through the machine's Substrait account link, and it does NOT
-necessarily include every repository the portal can connect. A repo missing from that list
-is not evidence of a wrong account, a broken install, or a repo problem — do not debug
-accounts, do not loop asking the user which account is right, and never propose recreating
-the repo under a different account. Tell the user to open app.substrait.build → **Build**
-→ **Connect GitHub** → pick the repo (after the first time this goes straight to the repo
-picker, ~45 seconds) — the portal uses the browser's own GitHub access and connects repos
-the CLI cannot list — then bind with step 2 and deploy.
+```bash
+bash substrait.sh link create --name <app-name>
+```
 
-**"Not installed" for a brand-new repo usually means per-repo access, not a missing
-install.** If the Substrait GitHub App was ever authorised with "Only select
-repositories", new repos are invisible to it until added. Fix (user does this, once):
-github.com → Settings → Applications → Installed GitHub Apps → Substrait → **Repository
-access** → set **All repositories** → Save. Then retry `link create`. Never suggest
-uninstalling the GitHub App.
+This makes an **upload-mode app**: `bash substrait.sh deploy` then packages this folder
+and uploads it directly — no GitHub App involvement at all, which is exactly why this
+rung works even when `link repos` can't see the repo. Keep pushing to GitHub exactly as
+before (the repo stays the master copy); only the deploy transport differs, and the app
+can be switched to GitHub deploys later with `link set-mode` once the installation is
+visible. Do not treat rung 1's failure as a problem to solve first — a repo missing from
+`link repos` is not evidence of a wrong account or a broken install; never debug
+accounts, never loop asking which account is right, and never propose recreating the
+repo under a different account. Go straight to rung 2 and ship.
+
+**Rung 3 — only if rung 2 is ALSO refused** (a workspace with zip uploads disabled):
+tell the user to open app.substrait.build → **Build** → **Connect GitHub** → pick the
+repo (goes straight to the picker after the first time, ~45 seconds), then bind with
+step 2 and deploy.
+
+**"Not installed" on rung 1 for a brand-new repo usually means per-repo access, not a
+missing install.** If the user specifically wants GitHub-connected deploys, the
+once-only fix is: github.com → Settings → Applications → Installed GitHub Apps →
+Substrait → **Repository access** → **All repositories** → Save, then retry rung 1.
+Never suggest uninstalling the GitHub App — and never block the build on any of this:
+rung 2 ships today.
 
 ### Step 1 — link this machine (browser). This is the normal way.
 
