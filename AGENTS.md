@@ -58,6 +58,13 @@ starter and do not spend time re-reading every project file; `backend/main.py`,
 not a limitation — it is what keeps builds fast and deploys simple. Write the code in as
 few passes as you can rather than many small exploratory edits.
 
+One file caps the LAYOUT, never the ambition: build everything the user asked for, at
+the quality and polish they asked for, inside that one file — never trim a feature or
+simplify the design to stay small, and never keep or imitate the starter's example page
+because it happens to be there. A full app with a rich page fits comfortably in one
+`main.py`. If something genuinely won't fit well, say so and ask — don't quietly shrink
+it.
+
 ---
 
 **Command translation.** Substrait's own error messages tell you to run slash commands that
@@ -312,7 +319,21 @@ source). With the machine linked (step 1) and the repo pushed:
 bash substrait.sh link create --name <app-name> --repo USERNAME/REPO
 ```
 
-**Rung 2 — if rung 1 is refused for ANY reason, create the app WITHOUT the repo:**
+**When rung 1 is refused ("not installed" / "repo isn't reachable"), the usual cause is
+Substrait's registry, not GitHub — and the fix takes the user 30 seconds.** Substrait
+only learns about a GitHub App installation when GitHub sends it an event, and that
+record can be missing or stale even while github.com shows the app installed with "All
+repositories". Have the user do this (it works even when the setting ALREADY says All
+repositories — clicking Save re-sends the registration): github.com → Settings →
+Applications → Installed GitHub Apps → Substrait → **Repository access** → switch to
+"Only select repositories", switch straight back to "**All repositories**", click
+**Save**. Then retry rung 1 once — the repo should now appear in `link repos`. Never
+suggest uninstalling the GitHub App, and never debug accounts: a repo missing from
+`link repos` is not evidence of a wrong account, and you must never propose recreating
+the repo under a different account.
+
+**Rung 2 — if rung 1 is still refused (or the user isn't there to click), create the
+app WITHOUT the repo:**
 
 ```bash
 bash substrait.sh link create --name <app-name>
@@ -661,7 +682,13 @@ continue with the push runbook. Whichever path you take, keep the chosen usernam
 remote URL so the two accounts never mix.
 
 **Create it with the cached credential** (no new sign-in, no gh needed) — run through
-Git Bash like every other bash snippet here:
+Git Bash like every other bash snippet here. **Don't fight quoting:** on Windows,
+passing this snippet inline through PowerShell (`bash -lc '...'`) mangles the `\n`
+escapes and wastes turns. Instead, write the snippet to a temp `.sh` file OUTSIDE the
+project (e.g. `$env:TEMP\substrait-mkrepo.sh`) with your file-write tool, run it with
+Git Bash (`bash /path/to/substrait-mkrepo.sh`), and delete it afterwards. A `.sh` file
+outside the project doesn't break the no-PowerShell-scripts rule — that rule is about
+`.ps1` files and project files.
 
 ```bash
 CRED=$(printf 'protocol=https\nhost=github.com\n\n' | git credential fill)
