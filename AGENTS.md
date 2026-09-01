@@ -228,9 +228,17 @@ database: oceanbase   # shared HA cluster, MySQL wire protocol, backed up — th
 Choose deliberately the first time.
 
 With `oceanbase` you are writing **MySQL**, not PostgreSQL: no `SERIAL`, no `RETURNING`, no
-`ILIKE`, no `$1` placeholders. Use `BIGINT AUTO_INCREMENT`, `%s` placeholders, the `asyncmy`
-driver. Never substitute SQLite, not even for local testing — different driver, different
-placeholders, different dialect.
+`ILIKE`, no `$1` placeholders. Use `BIGINT AUTO_INCREMENT`, `%s` placeholders. Never
+substitute SQLite, not even for local testing — different driver, different placeholders,
+different dialect.
+
+**The driver is pinned — do not choose one freely.** Async database code (SQLAlchemy
+asyncio): `asyncmy==0.2.14`, exactly — never an older pin (0.2.9 has no wheel for the
+Dockerfile's Python 3.12, so the deploy build fails at pip). Sync database code:
+`PyMySQL` plus `cryptography`. General rule for ANY package you add: deploys build with
+`--only-binary=:all:` on Python 3.12 and can never compile from source, so a compiled
+package must ship a prebuilt cp312 wheel — check PyPI before pinning if you are not
+certain.
 
 **Parse `DATABASE_URL` with percent-decoding.** The injected URL percent-encodes special
 characters in the username and the password (e.g. `%40` for `@`). Parse it with a real URL
@@ -261,6 +269,13 @@ substitute SQLite).
   small notice in the page (e.g. "Local test mode — data is not saved").
 - Never write "temporary" data to files as a workaround, and never skip features in
   local mode — the point is that the user can try everything before it goes live.
+- **The database driver must never block a local run.** Import it only where a real
+  `DATABASE_URL` is used (create the engine lazily), so the app starts without it. If the
+  driver fails to pip-install on the user's machine — typically no prebuilt wheel for
+  their Python version, "needs build tools" — do NOT debug it, do NOT switch drivers,
+  and do NOT change the pin: skip that package locally, run on temporary memory, and
+  tell the user in one sentence that this is normal and the deployed app is unaffected
+  (the deploy installs it inside Docker, where the pinned version is guaranteed to work).
 
 ### Where logging goes
 
