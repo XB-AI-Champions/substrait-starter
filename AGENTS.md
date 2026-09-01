@@ -232,6 +232,11 @@ With `oceanbase` you are writing **MySQL**, not PostgreSQL: no `SERIAL`, no `RET
 substitute SQLite, not even for local testing — different driver, different placeholders,
 different dialect.
 
+**NEVER use Python `%` string formatting or f-strings to build SQL queries.** Always use
+parameterized queries — `cursor.execute("... %s ...", (value,))`. This avoids SQL injection
+AND prevents format-character clashes (e.g. `%Y` in a date format being misread as a Python
+format specifier, which crashes the app with `unsupported format character`).
+
 **The driver is pinned — do not choose one freely.** Async database code (SQLAlchemy
 asyncio): `asyncmy==0.2.14`, exactly — never an older pin (0.2.9 has no wheel for the
 Dockerfile's Python 3.12, so the deploy build fails at pip). Sync database code:
