@@ -14,7 +14,12 @@
    `Set-Content`). It writes UTF-16 or a byte-order mark that silently breaks
    `requirements.txt`, `openapi.json` and every `.sh`. Use your own file-editing tool.
 4. **On Windows the scripts need Git Bash, not PowerShell:**
-   `& "$env:LOCALAPPDATA\Programs\Git\bin\bash.exe" substrait.sh <command>`
+   `& "$env:LOCALAPPDATA\Programs\Git\bin\bash.exe" substrait.sh <command> 2>&1`
+   **Always append `2>&1`.** The wrapper prints its errors and guidance to stderr, and
+   some IDE runners (TraeWork among them) show you only stdout — without `2>&1` a
+   failing command looks like "exit 1 with no output" and you are debugging blind.
+   If any substrait.sh run ever exits non-zero with nothing printed, re-run it with
+   `2>&1` before concluding anything.
 5. **Deploying takes THREE steps, and pushing is only the first two.**
    ```bash
    git add -A && git commit -m "..." && git push
@@ -39,6 +44,9 @@ starter"*, do ALL of the following without sending them anywhere:
 1. **Copy the starter's files into this folder — files only, never its git history.**
    If a clone brought a `.git` folder from the starter, delete it and run
    `git init -b main` fresh. This app's history starts here.
+   **Delete `SUBSTRAIT-CONTRACT.md` if the starter brought one** — it records the
+   STARTER project's own link ("Linked app: substrait-starter") and is stale here.
+   Linking this project recreates it with the right app.
 2. **The app is named after this folder.** The folder's name is the repo name and the
    app name (one app = one folder = one repository — the folder IS the app). Do not
    invent a different name and do not ask for one; the user chose it when they named
@@ -354,12 +362,15 @@ tell the user to open app.substrait.build → **Build** → **Connect GitHub** �
 repo (goes straight to the picker after the first time, ~45 seconds), then bind with
 step 2 and deploy.
 
-**"Not installed" on rung 1 for a brand-new repo usually means per-repo access, not a
-missing install.** If the user specifically wants GitHub-connected deploys, the
-once-only fix is: github.com → Settings → Applications → Installed GitHub Apps →
-Substrait → **Repository access** → **All repositories** → Save, then retry rung 1.
-Never suggest uninstalling the GitHub App — and never block the build on any of this:
-rung 2 ships today.
+**"Not linked" at deploy time is THIS ladder, not a login problem.** If
+`substrait.sh deploy` reports the folder isn't linked to an app (or `link status` shows
+the machine linked but no app bound), the machine link from the pre-work is fine — the
+project simply has no app yet. Run the creation ladder above immediately, yourself; do
+NOT start a browser "link"/login flow, and do NOT ask the user to link anything.
+And never take `SUBSTRAIT-CONTRACT.md` as evidence the folder is linked: the real
+binding is the gitignored `.substrait/config.json`, which never arrives with a clone.
+A `SUBSTRAIT-CONTRACT.md` naming `substrait-starter` is a stale copy from the starter —
+delete it; linking rewrites it correctly.
 
 ### Step 1 — link this machine (browser). This is the normal way.
 
