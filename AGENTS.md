@@ -25,6 +25,9 @@
    git add -A && git commit -m "..." && git push
    bash substrait.sh deploy
    ```
+   The snippet above is bash. **In the IDE runner (PowerShell) use `;` not `&&`** to chain
+   commands — Windows PowerShell does not support `&&` and will error with *"not a valid
+   statement separator"*.
    **`git push` alone does NOT publish anything.** Substrait's portal shows the label
    "auto-redeploys on push" — ignore it, it is wrong. The build is triggered by the deploy
    command, which tells Substrait to go and pull the branch you pushed. If you stop after
@@ -827,16 +830,12 @@ the token really is rejected as expired, and no amount of retrying helps.
 need to be on the company VPN. Never work around it by disabling certificate checks.
 
 **`echo: write error: Bad file descriptor` from any `substrait.sh` command.** The IDE runner
-is closing output pipes before the script finishes. **Do not retry in-editor — it will fail
-the same way every time.** Immediately rerun the exact same command in a launched window so
-you can read the output:
+closed the output pipe before the script finished. The command **still ran** — the output
+just didn't reach you. The script automatically saves a complete log every time it runs.
+**Read `.substrait-last-run.log` in the project folder** — it has the full output. Act on
+what the log says; do not retry the command just because the runner showed an error.
 
-```powershell
-Start-Process powershell -WorkingDirectory '<FULL PATH TO THIS FOLDER>' -ArgumentList '-NoExit','-Command','& "$env:LOCALAPPDATA\Programs\Git\bin\bash.exe" substrait.sh <COMMAND> 2>&1'
-```
-
-Replace `<COMMAND>` with the original subcommand (`deploy`, `link create --name …`, etc.).
 This is not a Substrait problem, not a linking problem, and not an auth problem. Don't
-diagnose it, don't ask the user about it — just move to the window.
+diagnose it, don't ask the user about it — just read the log file.
 
 **Never fall back to running the scripts in PowerShell.** They are bash and will not work.

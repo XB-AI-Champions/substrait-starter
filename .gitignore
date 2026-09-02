@@ -1,4 +1,5 @@
 .substrait/
+.substrait-last-run.log
 token.txt
 setup-check.txt
 __pycache__/

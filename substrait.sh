@@ -19,6 +19,27 @@ if [ ! -f substrait.yaml ] || [ ! -d backend ]; then
   exit 1
 fi
 
+# ── Pipe-safe output ────────────────────────────────────────────────────────────
+# IDE runners (TraeWork, OpenCode) sometimes close stdout before the script
+# finishes, causing "echo: write error: Bad file descriptor". We capture all
+# output to a log file so nothing is lost even when the pipe breaks. The AI
+# reads the log file; the user sees live output in a real terminal.
+_SUBSTRAIT_LOG="$(pwd)/.substrait-last-run.log"
+if [ "${_SUBSTRAIT_INNER:-}" != "1" ]; then
+  export _SUBSTRAIT_INNER=1
+  if [ -t 1 ]; then
+    # Real terminal — stream live AND keep a log
+    "$0" "$@" 2>&1 | tee "$_SUBSTRAIT_LOG"
+    exit ${PIPESTATUS[0]}
+  else
+    # Piped (IDE runner) — capture to file, immune to broken pipes
+    "$0" "$@" > "$_SUBSTRAIT_LOG" 2>&1
+    _rc=$?
+    cat "$_SUBSTRAIT_LOG" 2>/dev/null
+    exit $_rc
+  fi
+fi
+
 # ── Where the tooling lives ──────────────────────────────────────────────────────
 # Prefer LOCALAPPDATA on Windows: $HOME can be a redirected or mapped network drive on
 # corporate images, which makes the clone fail or crawl.
