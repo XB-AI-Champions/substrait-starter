@@ -660,6 +660,11 @@ pip install -r backend/requirements.txt
 cd backend && uvicorn main:app --reload --port 8000
 ```
 
+- **If port 8000 is already in use, try the next port up** (8001, 8002, …) until you find
+  a free one. Always tell the user which port the app is running on and give them the full
+  clickable URL (`http://127.0.0.1:PORT`). Never silently fail with "address already in
+  use" — just pick the next port.
+
 - **The server runs until stopped, so it cannot live in this editor's runner** (the runner
   kills long waits — same reason as the link flow). Launch it in a window using the
   *Interactive steps* pattern above, or run it in the background if your runner supports
