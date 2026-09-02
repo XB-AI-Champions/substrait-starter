@@ -827,9 +827,16 @@ the token really is rejected as expired, and no amount of retrying helps.
 need to be on the company VPN. Never work around it by disabling certificate checks.
 
 **`echo: write error: Bad file descriptor` from any `substrait.sh` command.** The IDE runner
-is closing output pipes before the script finishes. The command may have succeeded
-server-side but can't report it. Rerun the same command in a launched window — it's a
-runner problem, not a Substrait problem. Don't retry in-editor, don't ask the user to debug
-it, and don't treat it as a linking or auth failure.
+is closing output pipes before the script finishes. **Do not retry in-editor — it will fail
+the same way every time.** Immediately rerun the exact same command in a launched window so
+you can read the output:
+
+```powershell
+Start-Process powershell -WorkingDirectory '<FULL PATH TO THIS FOLDER>' -ArgumentList '-NoExit','-Command','& "$env:LOCALAPPDATA\Programs\Git\bin\bash.exe" substrait.sh <COMMAND> 2>&1'
+```
+
+Replace `<COMMAND>` with the original subcommand (`deploy`, `link create --name …`, etc.).
+This is not a Substrait problem, not a linking problem, and not an auth problem. Don't
+diagnose it, don't ask the user about it — just move to the window.
 
 **Never fall back to running the scripts in PowerShell.** They are bash and will not work.
