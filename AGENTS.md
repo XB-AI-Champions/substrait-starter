@@ -826,4 +826,10 @@ the token really is rejected as expired, and no amount of retrying helps.
 **Everything fails with "could not reach https://api.substrait.build".** Check whether they
 need to be on the company VPN. Never work around it by disabling certificate checks.
 
+**`echo: write error: Bad file descriptor` from any `substrait.sh` command.** The IDE runner
+is closing output pipes before the script finishes. The command may have succeeded
+server-side but can't report it. Rerun the same command in a launched window — it's a
+runner problem, not a Substrait problem. Don't retry in-editor, don't ask the user to debug
+it, and don't treat it as a linking or auth failure.
+
 **Never fall back to running the scripts in PowerShell.** They are bash and will not work.
