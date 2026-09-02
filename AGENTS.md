@@ -44,12 +44,16 @@ plain language, and never ask them to open a terminal and type.
 When the user says anything like *"set up a new Substrait app in this folder from the
 starter"*, do ALL of the following without sending them anywhere:
 
-1. **Copy the starter's files into this folder — files only, never its git history.**
-   If a clone brought a `.git` folder from the starter, delete it and run
-   `git init -b main` fresh. This app's history starts here.
-   **Delete `SUBSTRAIT-CONTRACT.md` if the starter brought one** — it records the
-   STARTER project's own link ("Linked app: substrait-starter") and is stale here.
-   Linking this project recreates it with the right app.
+1. **Delete `.git` and start fresh — this is not optional.**
+   The starter's `.git` folder points at `XB-AI-Champions/substrait-starter`.
+   If you keep it, every push sends this user's code into the shared starter
+   repo. **Always run this, even if you think it's already clean:**
+   ```bash
+   rm -rf .git && git init -b main
+   ```
+   Also delete `SUBSTRAIT-CONTRACT.md` if the starter brought one — it records
+   the STARTER project's own link ("Linked app: substrait-starter") and is stale
+   here. Linking this project recreates it with the right app.
 2. **The app is named after this folder.** The folder's name is the repo name and the
    app name (one app = one folder = one repository — the folder IS the app). Do not
    invent a different name and do not ask for one; the user chose it when they named
@@ -710,7 +714,7 @@ credential's username and `github.user` disagree, stop and ask which account is 
 
 1. **Git's own sign-in (preferred — nothing to install).** Put the chosen username in the
    remote URL (*Pushing to GitHub*, step 3) and run a remote operation — Git Credential
-   Manager shows a sign-in window for that account, once (step 6 there). After the
+   Manager shows a sign-in window for that account, once (step 7 there). After the
    sign-in, re-run the credential-fill creation, adding `username=USERNAME` as a third
    line of the `git credential fill` input so it selects that account's credential.
 2. **gh.** `gh auth login` for that account (install gh first if needed — see the
@@ -773,9 +777,14 @@ don't stop and report a problem you can still fix.**
 git remote set-url origin https://USERNAME@github.com/ORG/REPO.git
 ```
 
-**4. Check the destination:** `git ls-remote origin`. Refs listed = good.
+**4. Verify you are NOT pointing at the starter.** Run `git remote -v` and check
+the URL does NOT contain `XB-AI-Champions/substrait-starter`. If it does, you
+skipped setup step 1 — go back and delete `.git`, reinit, create a new repo, and
+set the remote to the user's own repo. **Never push to the starter.**
 
-**5. "Repository not found"** — four causes, identical message. Work through all four
+**5. Check the destination:** `git ls-remote origin`. Refs listed = good.
+
+**6. "Repository not found"** — four causes, identical message. Work through all four
 before reporting:
 
 | Check | How | If so |
@@ -785,12 +794,12 @@ before reporting:
 | Wrong account cached | Page loads, push still fails | `git ls-remote https://USERNAME@github.com/ORG/REPO` and let them sign in |
 | Stale generic credential | `cmdkey /list \| findstr -i github` | `cmdkey /delete:git:https://github.com`, retry |
 
-**6. The first push on a machine needs a real window.** Git Credential Manager's sign-in
+**7. The first push on a machine needs a real window.** Git Credential Manager's sign-in
 cannot appear from inside this editor. **Launch a window for them** — see *Interactive
 steps* above — never ask them to open a terminal and type. After that first success,
 Windows caches the credential and every later push from here is silent.
 
-**6b. Do not promise a sign-in window** — say what success looks like instead: "A GitHub sign-in window is about to open — that's
+**7b. Do not promise a sign-in window** — say what success looks like instead: "A GitHub sign-in window is about to open — that's
 expected, it only happens once." No window plus instant failure means a credential problem
 above, not a network one.
 

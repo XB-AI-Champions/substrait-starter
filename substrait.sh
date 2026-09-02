@@ -223,13 +223,41 @@ doctor() {
 }
 
 cmd="${1:-}"; shift 2>/dev/null || true
+
+# ── Guard: refuse to deploy/check from the shared starter repo ──────────────
+# If the git remote still points at the starter, the AI skipped setup step 1.
+# Catch it here before code lands in the wrong repository.
+_guard_starter() {
+  local _origin
+  _origin="$(git remote get-url origin 2>/dev/null)" || return 0  # no remote is fine
+  case "$_origin" in
+    *XB-AI-Champions/substrait-starter*|*xb-ai-champions/substrait-starter*)
+      echo "" >&2
+      echo "═══════════════════════════════════════════════════════════════════" >&2
+      echo "  STOP — git remote still points at the shared STARTER repo:"     >&2
+      echo "         $_origin"                                                 >&2
+      echo ""                                                                  >&2
+      echo "  You must create your OWN repository first."                      >&2
+      echo "  See AGENTS.md → 'Setting up a new app from the starter'."       >&2
+      echo ""                                                                  >&2
+      echo "  Quick fix:"                                                      >&2
+      echo "    rm -rf .git && git init -b main"                               >&2
+      echo "    git remote add origin https://USER@github.com/ACCOUNT/REPO.git" >&2
+      echo "    git add -A && git commit -m 'initial commit'"                  >&2
+      echo "    git push -u origin main"                                       >&2
+      echo "═══════════════════════════════════════════════════════════════════" >&2
+      echo "" >&2
+      exit 1 ;;
+  esac
+}
+
 case "$cmd" in
   doctor) doctor ;;
-  check)  fetch_tools; bash "$SCRIPTS/substrait-deploy.sh" check ;;
+  check)  _guard_starter; fetch_tools; bash "$SCRIPTS/substrait-deploy.sh" check ;;
   link)   fetch_tools
           if [ $# -eq 0 ]; then set -- account; fi
           bash "$SCRIPTS/substrait-link.sh" "$@" ;;
-  deploy) fetch_tools; bash "$SCRIPTS/substrait-deploy.sh" --watch "$@" ;;
+  deploy) _guard_starter; fetch_tools; bash "$SCRIPTS/substrait-deploy.sh" --watch "$@" ;;
   env)    fetch_tools; bash "$SCRIPTS/substrait-env.sh" "$@" ;;
   library) fetch_tools; bash "$SCRIPTS/substrait-library.sh" "$@" ;;
   *) echo "usage: bash substrait.sh {doctor|check|link|deploy|env|library}" >&2; exit 2 ;;
