@@ -41,139 +41,165 @@ PAGE = """<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>__APP_NAME__</title>
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400;500;700&display=swap" rel="stylesheet">
 <style>
-  :root { color-scheme: light; }
-  * { box-sizing: border-box; }
+  * { box-sizing: border-box; margin: 0; }
   body {
-    margin: 0;
     min-height: 100vh;
-    display: grid;
-    place-items: center;
-    font: 16px/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    background: linear-gradient(180deg, #f4f7fb 0%, #eef2f7 100%);
-    color: #172033;
-    padding: 32px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Satoshi', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: #f5f5f4;
+    padding: 40px 20px;
+    -webkit-font-smoothing: antialiased;
   }
-  .layout {
-    width: 100%;
-    max-width: 640px;
-  }
-  .hero {
-    margin-bottom: 18px;
-    text-align: left;
-  }
-  .eyebrow {
-    display: inline-block;
-    margin-bottom: 10px;
-    padding: 6px 12px;
-    border-radius: 999px;
-    background: rgba(23, 32, 51, 0.06);
-    color: #41506a;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-  .hero h1 {
-    margin: 0;
-    font-size: clamp(2.2rem, 5vw, 3.4rem);
-    line-height: 1.05;
-    letter-spacing: -0.04em;
-    color: #0f172a;
-  }
-  .hero p {
-    margin: 12px 0 0;
-    max-width: 520px;
-    color: #526076;
-    font-size: 16px;
-  }
-  .card {
-    background: rgba(255, 255, 255, 0.82);
-    border: 1px solid rgba(148, 163, 184, 0.22);
-    border-radius: 22px;
-    padding: 36px;
-    width: 100%;
-    box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
-    backdrop-filter: blur(14px);
-  }
-  .card h2 {
-    margin: 0 0 8px;
-    font-size: 24px;
-    letter-spacing: -0.02em;
-    color: #0f172a;
-  }
-  .card p {
-    margin: 0 0 20px;
-    color: #5c6779;
-  }
+  .wrap { max-width: 440px; width: 100%; text-align: center; }
+  .header { margin-bottom: 40px; }
   .pill {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 14px;
-    border-radius: 999px;
+    gap: 6px;
+    background: #f0fdfa;
+    padding: 6px 14px;
+    border-radius: 20px;
+    margin-bottom: 24px;
+  }
+  .pill-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #b0b0b0;
+  }
+  .pill-dot.ok { background: #10b981; }
+  .pill-dot.err { background: #ef4444; }
+  .pill-dot.wait { animation: blink 1.3s ease-in-out infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+  .pill-text {
+    font-size: 12px;
+    font-weight: 500;
+    color: #0d9488;
+    letter-spacing: 0.02em;
+  }
+  h1 {
+    font-size: 32px;
+    font-weight: 700;
+    color: #1c1917;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+  }
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    text-align: left;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.03);
+  }
+  .card-status {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .card-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: #f5f5f4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .card-icon.ok { background: #f0fdf4; }
+  .card-icon.err { background: #fef2f2; }
+  .card-label {
     font-size: 14px;
     font-weight: 600;
-    background: #eef2f7;
-    color: #526076;
+    color: #1c1917;
   }
-  .pill.ok { background: #e7f6ec; color: #10682f; }
-  .pill.fail { background: #fdecec; color: #9a1f1f; }
-  .dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: currentColor;
+  .card-sub {
+    font-size: 12px;
+    color: #a8a29e;
+    margin-top: 2px;
   }
-  .next {
-    margin-top: 28px;
-    padding-top: 20px;
-    border-top: 1px solid rgba(148, 163, 184, 0.22);
-    font-size: 14px;
-    color: #5c6779;
+  .card-rule {
+    height: 1px;
+    background: #f3f4f6;
+    margin-bottom: 20px;
   }
-  code {
-    background: #eef2f7;
-    padding: 2px 6px;
+  .card-hint {
+    font-size: 13.5px;
+    color: #78716c;
+    line-height: 1.65;
+  }
+  .card-hint code {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 12.5px;
+    background: #f0fdfa;
+    color: #0d9488;
+    padding: 2px 8px;
     border-radius: 5px;
-    font-size: 13px;
+  }
+  .foot {
+    font-size: 12px;
+    color: #c4c4cc;
+    margin-top: 28px;
+  }
+  @media (max-width: 480px) {
+    h1 { font-size: 27px; }
+    .card { padding: 20px; }
   }
 </style>
 </head>
 <body>
-  <div class="layout">
-    <section class="hero">
-      <span class="eyebrow">Welcome</span>
-      <h1>Hello World</h1>
-      <p>A clean, modern starting point for your Substrait application.</p>
-    </section>
-
-    <main class="card">
-      <h2>__APP_NAME__</h2>
-      <p>Your app is deployed and running on Substrait.</p>
-
-      <span class="pill" id="status"><span class="dot"></span> Checking the backend…</span>
-
-      <div class="next">
-        This page is served by <code>backend/main.py</code>.
-        Tell your AI assistant what you want to build and it will edit that file,
-        then deploy again to see your changes live.
-      </div>
-    </main>
+<div class="wrap">
+  <div class="header">
+    <div class="pill">
+      <div class="pill-dot wait" id="pdot"></div>
+      <span class="pill-text" id="ptxt">Checking&hellip;</span>
+    </div>
+    <h1>__APP_NAME__</h1>
   </div>
+
+  <div class="card">
+    <div class="card-status">
+      <div class="card-icon" id="cico">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <circle cx="9" cy="9" r="4" fill="#d4d4d4" id="cdot"/>
+        </svg>
+      </div>
+      <div>
+        <p class="card-label" id="clbl">Connecting&hellip;</p>
+        <p class="card-sub" id="csub">Waiting for backend</p>
+      </div>
+    </div>
+    <div class="card-rule"></div>
+    <p class="card-hint">
+      Served from <code>backend/main.py</code> &mdash;
+      describe what you want and your AI will rebuild this page.
+    </p>
+  </div>
+
+  <p class="foot">Powered by Substrait</p>
+</div>
 
 <script>
   fetch("/api/info")
-    .then(r => r.ok ? r.json() : Promise.reject(r.status))
-    .then(d => {
-      const el = document.getElementById("status");
-      el.className = "pill ok";
-      el.innerHTML = '<span class="dot"></span> Backend responding &middot; ' + d.server_time;
+    .then(function(r){ return r.ok ? r.json() : Promise.reject(r.status); })
+    .then(function(d){
+      document.getElementById("pdot").className = "pill-dot ok";
+      document.getElementById("ptxt").textContent = "Deployed on Substrait";
+      document.getElementById("cico").className = "card-icon ok";
+      document.getElementById("cdot").setAttribute("fill", "#10b981");
+      document.getElementById("clbl").textContent = "Online";
+      document.getElementById("csub").textContent = "All systems operational";
     })
-    .catch(() => {
-      const el = document.getElementById("status");
-      el.className = "pill fail";
-      el.innerHTML = '<span class="dot"></span> Backend not responding';
+    .catch(function(){
+      document.getElementById("pdot").className = "pill-dot err";
+      document.getElementById("ptxt").textContent = "Backend unreachable";
+      document.getElementById("cico").className = "card-icon err";
+      document.getElementById("cdot").setAttribute("fill", "#ef4444");
+      document.getElementById("clbl").textContent = "Offline";
+      document.getElementById("csub").textContent = "Backend not responding";
     });
 </script>
 </body>
