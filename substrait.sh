@@ -238,7 +238,7 @@ _guard_starter() {
       echo "         $_origin"                                                 >&2
       echo ""                                                                  >&2
       echo "  You must create your OWN repository first."                      >&2
-      echo "  See AGENTS.md → 'Setting up a new app from the starter'."       >&2
+      echo "  See docs/new-app-setup.md for the full steps."                   >&2
       echo ""                                                                  >&2
       echo "  Quick fix:"                                                      >&2
       echo "    rm -rf .git && git init -b main"                               >&2
