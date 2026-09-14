@@ -8,6 +8,8 @@
 #   bash substrait.sh deploy    build and ship, streaming the log
 #   bash substrait.sh env ...   manage the app's env vars and secrets
 #   bash substrait.sh library   browse the internal API catalogue (needs the account link)
+#   bash substrait.sh logs      read the deployed app's runtime logs (needs the account link)
+#   bash substrait.sh logout    sign this machine out of Substrait (revokes the token)
 set -uo pipefail
 
 # ── Always run from the project root, whatever the caller's working directory ─────
@@ -238,7 +240,7 @@ _guard_starter() {
       echo "         $_origin"                                                 >&2
       echo ""                                                                  >&2
       echo "  You must create your OWN repository first."                      >&2
-      echo "  See AGENTS.md → 'Setting up a new app from the starter'."       >&2
+      echo "  See docs/new-app-setup.md for the full steps."                   >&2
       echo ""                                                                  >&2
       echo "  Quick fix:"                                                      >&2
       echo "    rm -rf .git && git init -b main"                               >&2
@@ -260,5 +262,7 @@ case "$cmd" in
   deploy) _guard_starter; fetch_tools; bash "$SCRIPTS/substrait-deploy.sh" --watch "$@" ;;
   env)    fetch_tools; bash "$SCRIPTS/substrait-env.sh" "$@" ;;
   library) fetch_tools; bash "$SCRIPTS/substrait-library.sh" "$@" ;;
-  *) echo "usage: bash substrait.sh {doctor|check|link|deploy|env|library}" >&2; exit 2 ;;
+  logs)   fetch_tools; bash "$SCRIPTS/substrait-logs.sh" "$@" ;;
+  logout) fetch_tools; bash "$SCRIPTS/substrait-link.sh" logout "$@" ;;
+  *) echo "usage: bash substrait.sh {doctor|check|link|deploy|env|library|logs|logout}" >&2; exit 2 ;;
 esac
