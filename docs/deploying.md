@@ -79,6 +79,37 @@ Update `openapi.json` in the same edit, to match what `backend/main.py` now serv
 deploy warns when it's older than your latest `backend/` change, and warns if it's missing —
 currently advisory, but slated to become a hard requirement.
 
+### OpenAPI as the published API description
+
+`openapi.json` at the repo root is the app's **published** API description — shown on the
+portal's API tab and in the API Library. It takes precedence over the runtime harvest of the
+app's own `/openapi.json`. Author it from the code; never list endpoints or fields the code
+doesn't serve. Must be valid JSON with a top-level `paths` key, ≤ 1 MB.
+
+## Deploy-mode switching
+
+There are two deploy modes:
+
+- **Upload** (zip) — the deploy command packages and uploads the code. The default for apps
+  created without `--repo`.
+- **Connect** (GitHub) — the deploy command tells the portal to pull from the pushed branch.
+  Required when the workspace has zip uploads disabled.
+
+If you hit the error **"chose GitHub deploys but the app isn't connected"**, the recorded mode
+doesn't match the server. Fix it:
+
+```bash
+bash substrait.sh link set-mode --mode connect --repo OWNER/REPO
+```
+
+To create an app that is GitHub-connected from birth (required in some workspaces):
+
+```bash
+bash substrait.sh link create --name <app-name> --repo OWNER/REPO
+```
+
+See `docs/linking.md` for the full creation ladder.
+
 ## `bash substrait.sh check`
 
 Run before every deploy. Exit 0 = compliant, exit 1 = problems. It reports all of these:

@@ -47,6 +47,8 @@ plain language, and never ask them to open a terminal and type.
 | Set up a new app from the starter | `docs/new-app-setup.md` |
 | Add or troubleshoot a database | `docs/database.md` |
 | Add Redis, Kafka, vector search, or storage | `docs/services.md` |
+| Use object storage (file uploads) | `docs/object-storage.md` |
+| Browse or call library APIs | `docs/api-library.md` |
 | Add torch or heavy ML packages | `docs/heavy-packages.md` |
 | Build user-identity features | `docs/identity-sso.md` |
 | Link this project to Substrait | `docs/linking.md` |
@@ -141,6 +143,20 @@ The platform injects `X-Forwarded-Email` and `X-Forwarded-User` headers. **Never
 login page** — just read `request.headers.get("X-Forwarded-Email")`. Read
 `docs/identity-sso.md` for caveats.
 
+### Reading runtime logs
+
+When the app is deployed but misbehaving (500s, blank page):
+
+```bash
+bash substrait.sh logs                          # backend (default)
+bash substrait.sh logs --component frontend     # frontend/nginx
+bash substrait.sh logs --tail 300               # more lines (max 500)
+```
+
+Needs the account link (PAT). If 401, run `bash substrait.sh link` first.
+A pod in `CrashLoopBackOff` means the latest code is NOT live — the old pod is still serving.
+Read `docs/troubleshooting.md` for the full diagnosis guide.
+
 ---
 
 **Command translation.** Substrait's own error messages tell you to run slash commands that
@@ -152,6 +168,8 @@ do not exist here. Translate them:
 | `/substrait:link` | `bash substrait.sh link apps` then `link use --app <slug>` |
 | `/substrait:deploy` | `bash substrait.sh deploy` |
 | `/substrait:init` | not applicable — this project is already set up |
+| `/substrait:logs` | `bash substrait.sh logs` |
+| `/substrait:logout` | `bash substrait.sh logout` |
 
 ---
 

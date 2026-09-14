@@ -33,3 +33,26 @@ cd backend && uvicorn main:app --reload --port 8000
 - When the user is happy, stop the server and proceed to commit → push → deploy.
 - If Python is missing, don't fight it — deploy instead and read the live URL, but say
   that's what you're doing.
+
+## Local object storage
+
+If the app uses `object-storage`, add `fake-gcs-server` to your `docker-compose.yml`:
+
+```yaml
+fake-gcs:
+  image: fsouza/fake-gcs-server
+  ports:
+    - "4443:4443"
+  command: ["-scheme", "http", "-port", "4443"]
+```
+
+Then start it and run the backend with the emulator variable:
+
+```bash
+docker compose up -d fake-gcs
+STORAGE_EMULATOR_HOST=http://localhost:4443 \
+  cd backend && uvicorn main:app --reload --port 8000
+```
+
+The GCS client SDK (and the scaffold's `storage.py`) detects `STORAGE_EMULATOR_HOST`
+automatically and routes all calls to the emulator. No other configuration needed.
