@@ -38,6 +38,10 @@
 Everything below is detail. The user is not a developer — do the work, then explain it in
 plain language, and never ask them to open a terminal and type.
 
+**If you hit an error or behaviour these docs don't cover**, the starter files may be stale.
+Run `bash substrait.sh update` to pull the latest scaffolding (AGENTS.md, docs/, substrait.sh)
+from the starter repo — it never touches the app's code or config.
+
 ---
 
 ## Detailed runbooks — read the one you need, when you need it
