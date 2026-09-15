@@ -174,6 +174,7 @@ do not exist here. Translate them:
 | `/substrait:init` | not applicable — this project is already set up |
 | `/substrait:logs` | `bash substrait.sh logs` |
 | `/substrait:logout` | `bash substrait.sh logout` |
+| "update the starter files" | `bash substrait.sh update` |
 
 ---
 

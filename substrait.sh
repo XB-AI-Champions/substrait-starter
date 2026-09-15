@@ -10,6 +10,7 @@
 #   bash substrait.sh library   browse the internal API catalogue (needs the account link)
 #   bash substrait.sh logs      read the deployed app's runtime logs (needs the account link)
 #   bash substrait.sh logout    sign this machine out of Substrait (revokes the token)
+#   bash substrait.sh update    pull latest scaffolding (AGENTS.md, docs/, substrait.sh, SETUP.md)
 set -uo pipefail
 
 # ── Always run from the project root, whatever the caller's working directory ─────
@@ -224,6 +225,56 @@ doctor() {
   else echo "RESULT: READY"; return 0; fi
 }
 
+# ── update: pull the latest scaffolding files from the starter repo ─────────
+# Replaces ONLY the infrastructure files (AGENTS.md, substrait.sh, docs/, SETUP.md,
+# README.md). Never touches the app's own code or config: backend/, frontend/, cicd/,
+# substrait.yaml, openapi.json, .substrait/, .gitignore.
+STARTER_REPO="https://github.com/XB-AI-Champions/substrait-starter.git"
+_SCAFFOLD_FILES="AGENTS.md substrait.sh SETUP.md README.md docs"
+
+update_scaffold() {
+  echo "Updating scaffolding from the starter repo…"
+  local tmpdir
+  tmpdir="$(mktemp -d)" || { echo "Error: could not create temp directory." >&2; exit 1; }
+  # shellcheck disable=SC2064
+  trap "rm -rf '$tmpdir'" EXIT
+
+  if ! git clone --depth 1 --config core.autocrlf=false --config core.eol=lf \
+       "$STARTER_REPO" "$tmpdir/starter" 2>&1; then
+    echo "Error: could not fetch the starter repo." >&2
+    echo "       Check your network and try again." >&2
+    exit 1
+  fi
+
+  # Remove old docs/ so deleted files don't linger
+  rm -rf docs/
+
+  # Copy each scaffold file/directory
+  local item
+  for item in $_SCAFFOLD_FILES; do
+    if [ -e "$tmpdir/starter/$item" ]; then
+      if [ -d "$tmpdir/starter/$item" ]; then
+        cp -r "$tmpdir/starter/$item" "$item"
+      else
+        cp "$tmpdir/starter/$item" "$item"
+      fi
+      echo "  updated: $item"
+    fi
+  done
+
+  # Fix line endings on Windows — the clone should be LF but be safe
+  if command -v sed >/dev/null 2>&1; then
+    sed -i 's/\r$//' substrait.sh 2>/dev/null || true
+  fi
+
+  rm -rf "$tmpdir"
+  trap - EXIT
+
+  echo ""
+  echo "Scaffolding updated. Your app code is untouched."
+  echo "Run 'git diff' to review, then commit when ready."
+}
+
 cmd="${1:-}"; shift 2>/dev/null || true
 
 # ── Guard: refuse to deploy/check from the shared starter repo ──────────────
@@ -264,5 +315,6 @@ case "$cmd" in
   library) fetch_tools; bash "$SCRIPTS/substrait-library.sh" "$@" ;;
   logs)   fetch_tools; bash "$SCRIPTS/substrait-logs.sh" "$@" ;;
   logout) fetch_tools; bash "$SCRIPTS/substrait-link.sh" logout "$@" ;;
-  *) echo "usage: bash substrait.sh {doctor|check|link|deploy|env|library|logs|logout}" >&2; exit 2 ;;
+  update) update_scaffold ;;
+  *) echo "usage: bash substrait.sh {doctor|check|link|deploy|env|library|logs|logout|update}" >&2; exit 2 ;;
 esac
