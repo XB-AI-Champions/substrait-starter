@@ -31,6 +31,7 @@ The App Connector is already written. It is the file `AppConnector.gs` in the ch
 8. **Show errors exactly as received:** `code`, `message_en`, `message_zh`.
 9. **Only use the actions listed below.** The connector refuses anything else.
 10. **The app can't send its own AI prompt through the connector.** It picks a named question from `Connector_AI`. If the user needs a new AI question, tell them the exact row to add to `Connector_AI`. (For free-form AI inside the app, use the AI gateway from the backend — see AI_CONNECTION.md.)
+11. **Never silently swap email recipients.** If a shipment row needs a shipper email, read the allowed lookup tab (for example `Shipper_Master`) and match by the row's shipper ID. If no recipient is found, leave the field empty and ask the user to fill it in. Do not fall back to the signed-in user, the connector owner, or any other address unless the user explicitly chooses it.
 
 ## Setting up (the champion does this once)
 
@@ -149,8 +150,19 @@ await callAppsScript({ action: "add", request_id: newRequestId(), tab: "App_Entr
 const email = await callAppsScript({ action: "ai", request_id: newRequestId(),
                                      question: "follow_up_email", key: "SBX-100021" });
 
+// If the shipment does not carry the recipient email directly, read the allowed
+// lookup tab and match by ID. If no match is found, leave the recipient blank for
+// the user to choose; never silently substitute another address.
+const shippers = await callAppsScript({ action: "read", tab: "Shipper_Master", limit: 200 });
+const shipperHeaders = shippers.headers || [];
+const shipperRows = (shippers.rows || []).map((row) =>
+  Object.fromEntries(shipperHeaders.map((header, index) => [header, row[index] || ""]))
+);
+const shipper = shipperRows.find((row) => row.Shipper_ID === "SHIPPER-001");
+const recipient = shipper ? shipper.Email : "";
+
 await callAppsScript({ action: "draft", request_id: newRequestId(),
-                       to: "ka-alerts@sandbox.example", subject: "Update on SBX-100021", body: "..." });
+                       to: recipient, subject: "Update on SBX-100021", body: "..." });
 
 await callAppsScript({ action: "chat", request_id: newRequestId(), text: "SBX-100021 escalated" });
 ```
