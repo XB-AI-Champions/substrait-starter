@@ -25,11 +25,12 @@ The App Connector is already written. It is the file `AppConnector.gs` in the ch
 2. **Get the `/exec` URL from the backend at page load**, from an environment variable `APPS_SCRIPT_URL`, via a route such as `GET /api/config`. Never write the URL into code or commit it.
 3. **Treat the `/exec` URL like a password.** Anyone who has it can make the connector act as the champion, from any website. Never print it on the page, in logs, or in error messages.
 4. **Every write sends a new `request_id`** (one per click). This stops double-clicks and refreshes from doing the same thing twice.
-5. **Keep each call under 8 KB.** Everything travels in the URL. The helper below refuses larger calls before sending.
-6. **Ask before sending email.** A `send` must follow a confirmation that shows the recipient, subject and body. Prefer `draft` when a person should review first.
-7. **Show errors exactly as received:** `code`, `message_en`, `message_zh`.
-8. **Only use the actions listed below.** The connector refuses anything else.
-9. **The app can't send its own AI prompt through the connector.** It picks a named question from `Connector_AI`. If the user needs a new AI question, tell them the exact row to add to `Connector_AI`. (For free-form AI inside the app, use the AI gateway from the backend — see AI_CONNECTION.md.)
+5. **Disable the clicked button and show `Working...` while a connector call is running.** Re-enable it only after the call succeeds or fails. This prevents accidental double-clicks before the idempotency check can reply.
+6. **Keep each call under 8 KB.** Everything travels in the URL. The helper below refuses larger calls before sending.
+7. **Ask before sending email.** A `send` must follow a confirmation that shows the recipient, subject and body. Prefer `draft` when a person should review first.
+8. **Show errors exactly as received:** `code`, `message_en`, `message_zh`.
+9. **Only use the actions listed below.** The connector refuses anything else.
+10. **The app can't send its own AI prompt through the connector.** It picks a named question from `Connector_AI`. If the user needs a new AI question, tell them the exact row to add to `Connector_AI`. (For free-form AI inside the app, use the AI gateway from the backend — see AI_CONNECTION.md.)
 
 ## Setting up (the champion does this once)
 
