@@ -60,6 +60,7 @@ With a PDF:
 
 Limits:
 - **Files: PDF only**, one per call, at most **5 MB** and **5 pages**. Base64 makes a file about a third larger.
+- Use **text PDFs or clean, readable scans only**. Low-quality scanned images may return fast but miss the invoice fields. If a scan is hard to read by eye, ask the user for a clearer file before calling AI.
 - The whole request must finish within about **25 seconds**, or the gateway returns `AI_TIMEOUT`.
 
 ## The response
@@ -172,6 +173,8 @@ def ask_ai(prompt, files=None):
 ## Example: a document check route
 
 The web page reads the chosen file with `FileReader.readAsDataURL`, removes everything up to and including the first comma, and sends the base64 text to this route as JSON. This avoids file-upload packages.
+
+Show a short note next to the upload button: **Text PDFs work best. Scanned PDFs must be clear and readable.**
 
 ```python
 import base64
