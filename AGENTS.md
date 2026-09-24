@@ -2,6 +2,15 @@
 
 ## READ THIS FIRST — the five rules that matter most
 
+## Adding AI or Google features — read the connection file first
+
+- Before adding ANY AI feature, read `AI_CONNECTION.md` (@AI_CONNECTION.md) and follow it exactly.
+- Before making this app read or write a Google Sheet, draft or send email, or post to
+  Google Chat, read `GOOGLE_CONNECTION.md` (@GOOGLE_CONNECTION.md) and follow it exactly.
+- These two files override anything you know from elsewhere about calling AI or Google
+  from an app. In particular: never use an AI provider's SDK or ask the user for an AI
+  API key, and never try to reach Google from the backend.
+
 1. **Anything failing? Run `bash substrait.sh doctor` before guessing.** It checks the
    folder, line endings, git config and network, changes nothing, and ends in READY /
    OK WITH WARNINGS / BLOCKED. If the user says *"something's not working"*, *"check my
@@ -134,6 +143,22 @@ environments, promote, and seed SQL.
 **If the deploy says this folder isn't linked**, run the linking ladder above — don't start
 a login flow. Read `docs/deploying.md` for the full error table, the check command, and
 push-failure recovery.
+
+## App settings (environment variables)
+
+Some features need settings. Set them with `substrait.sh`, never in code or a committed file.
+
+- A **secret** (for example `AI_GATEWAY_KEY`):
+  `read -rsp "AI_GATEWAY_KEY: " AI_GATEWAY_KEY; printf '%s' "$AI_GATEWAY_KEY" | bash substrait.sh env set AI_GATEWAY_KEY --secret; unset AI_GATEWAY_KEY`
+- A **normal setting** (for example `AI_GATEWAY_URL`, `APPS_SCRIPT_URL`):
+  `bash substrait.sh env set AI_GATEWAY_URL "https://xb-ai-gateway--dev.ninjavan.apps.substrait.build"`
+
+**After setting or changing any setting, redeploy.** The running app does not see a new
+value until a redeploy has finished. If the user tests before that, a correct key still
+fails. Tell the user this every time you set a setting for them.
+
+Never print a secret's value, and never ask the user to paste a secret into the chat.
+If a secret is needed, give the user the command to run themselves.
 
 ### Running locally
 
