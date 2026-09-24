@@ -72,7 +72,7 @@ Error messages name the tab and setting to fix. Show them to the user as they ar
 ```javascript
 let APPS_SCRIPT_URL = null;
 const MAX_URL_LENGTH = 8000;
-const CALL_TIMEOUT_MS = 20000;
+const CALL_TIMEOUT_MS = 30000;
 
 async function loadAppsScriptUrl() {
   const res = await fetch("/api/config");
@@ -179,4 +179,5 @@ Keep the app's **Google SSO turned on**, so only Ninja Van staff can load the pa
 | `QUESTION_NOT_FOUND` | No such AI question | Add a row to `Connector_AI` |
 | `NO_WEBHOOK` | Chat address missing | Add `CHAT_WEBHOOK_URL` (or `CHAT_WEBHOOK_URL_<NAME>`) in Script Properties |
 | `MISSING_REQUEST_ID` | The page didn't send one | Use `newRequestId()` for every write |
+| App still shows old text or old behavior after deploy | The old page JavaScript is still in the browser | Hard reload the page after the deployment is live. In Chrome: hold Shift and click reload, or press Cmd+Shift+R. |
 | Changed the connector **code** but nothing changed | The deployment still runs the old version | Deploy → Manage deployments → edit → Version: New version. (Settings-tab changes don't need this.) |
