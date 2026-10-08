@@ -1,4 +1,10 @@
 FROM python:3.12-slim
+# Apply Debian's outstanding security updates on every build. Substrait scans this image's
+# OS packages: a CVE with a published fix BLOCKS promotion to production; one with no fix is
+# advisory only. Keep this directly under FROM so it re-runs whenever the base image moves.
+RUN apt-get update \
+ && apt-get upgrade -y \
+ && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 

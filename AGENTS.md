@@ -136,9 +136,14 @@ bash substrait.sh deploy
 
 **Keep `openapi.json` current** — update it whenever you add, remove, or rename an API route.
 
-**Deploy to a non-production environment:** `bash substrait.sh deploy --env staging`. Each
-environment has its own database, bucket, URL, and env vars. Read `docs/deploying.md` for
-environments, promote, and seed SQL.
+**Environments — `dev` and `production` only.** A NEW app starts in `dev`
+(`https://<slug>--dev.ninjavan.apps.substrait.build`, always behind Ninja Van sign-in) and
+has no production until it goes live. A bare `bash substrait.sh deploy` goes to the app's
+default environment — read the `Target environment:` line it prints and tell the user which
+one it was, and give them THAT environment's URL. Older apps default to production.
+**Never request going live or a promotion to production unless the user explicitly asks** —
+it starts a security review, and production starts with an EMPTY database. Read
+`docs/deploying.md` for environments, promotion, and seed SQL.
 
 **If the deploy says this folder isn't linked**, run the linking ladder above — don't start
 a login flow. Read `docs/deploying.md` for the full error table, the check command, and
@@ -230,7 +235,15 @@ it to `backend/Dockerfile`, the context becomes `backend/` and every `COPY` path
 
 **Never `FROM nginx` in the backend Dockerfile.** Containers run with all Linux
 capabilities dropped and stock nginx crashloops on its startup chown. Use
-`nginxinc/nginx-unprivileged` with `listen 8000` if you need nginx.
+`nginxinc/nginx-unprivileged` with `listen 8000` if you need nginx — on the floating
+`stable-alpine` tag, with the security-update line bracketed (`USER root` /
+`RUN apk upgrade --no-cache` / `USER nginx`).
+
+**Every Dockerfile you write: patch the final stage.** Directly under its `FROM`, add
+`RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*` (Debian/Ubuntu)
+or `RUN apk upgrade --no-cache` (Alpine), and use a base tag the vendor still rebuilds
+(`python:3.12-slim`, `nginx:stable-alpine`), not a frozen minor. The platform's image scan
+blocks promotion to production on any OS flaw that already has a published fix.
 
 ---
 

@@ -7,8 +7,8 @@ exports.
 ## What you get
 
 - **One private bucket per app, per environment**, injected as **`OBJECT_STORAGE_BUCKET`**.
-  An app with `production` and `staging` has two buckets and two identities; each pod can
-  reach only its own environment's, so a staging deploy can never read or overwrite
+  An app with `dev` and `production` has two buckets and two identities; each pod can
+  reach only its own environment's, so a `dev` deploy can never read or overwrite
   production's files.
 - **No credential.** The pod authenticates as itself (Workload Identity). There is no key to
   mount, no secret to rotate, and **nothing about storage belongs in `.env.example`**. Never
@@ -24,7 +24,7 @@ exports.
 - **Durable storage.** Files survive redeploys, rollbacks and manifest edits. Removing the
   `object-storage` declaration does NOT delete the bucket — the deploy just warns. The bucket
   is deleted only after the app or the environment is deleted, and after a grace period.
-- **A new environment starts EMPTY.** Creating `staging`, or taking an app live, gives that
+- **A new environment starts EMPTY.** Adding `dev`, or taking an app live, gives that
   environment a fresh bucket — nothing is copied from a sibling, exactly as its database is
   not. Read `OBJECT_STORAGE_BUCKET`; never hard-code a bucket name, and never assume a key
   that exists in one environment exists in another.

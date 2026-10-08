@@ -69,7 +69,8 @@ Don't set this up unless asked — pushing is enough.
 | "local HEAD doesn't match the pushed tip" | Unpushed commits | `git push`, deploy again |
 | "isn't a git checkout" | Wrong folder | Run from the repo root |
 | "chose GitHub deploys but the app isn't connected" | Recorded mode vs server disagree | `bash substrait.sh link set-mode --mode connect --repo OWNER/REPO` (needs the account link) |
-| HTTP 409 | Server-side SHA mismatch | Push, then deploy again |
+| HTTP 409 "deploy refused" naming production | Deploying straight to production on an app that has `dev` | Deploy to `dev` (drop `--env production`); production changes only by promotion — and only if the user asks |
+| HTTP 409 (other) | Server-side SHA mismatch | Push, then deploy again |
 
 A sign-in window during **deploy** (not push) is the `git fetch` the freshness check runs.
 
@@ -112,44 +113,64 @@ See `docs/linking.md` for the full creation ladder.
 
 ## Deploy environments
 
-An app can have more than one **deploy environment** — `production` (the default) plus e.g.
-`staging` or `dev`, each with its own namespace, database, URL, variables and access settings.
-Environments are created on the app's page in the portal (the environment switcher under the
-header).
+An app has at most two **deploy environments**: `dev` and `production`. Each is a full,
+separate instance with its own database, bucket, URL, variables and secrets.
 
-```bash
-bash substrait.sh deploy --env staging          # deploy to staging instead of production
-```
+| | `dev` | `production` |
+|---|---|---|
+| URL | `https://<slug>--dev.ninjavan.apps.substrait.build` | `https://<slug>.ninjavan.apps.substrait.build` |
+| Access | Always behind Ninja Van sign-in — can never be made public | Set on the app's Access tab |
+| Created | When the app is created (new apps) | When the app **goes live** |
+| Data | Can be seeded from `backend/db/seed.sql` | Starts EMPTY; never seeded |
 
-- The same folder deploys to any environment — nothing in the code changes. The app can read
-  `SUBSTRAIT_ENV` (`production` | `preview`), `SUBSTRAIT_ENV_NAME` and `APP_URL` at runtime.
-- Each environment has its **own** env vars and secrets. Use `--env <name>` with the env
-  command too: `bash substrait.sh env --env staging list`. Creating an environment in the
-  portal copies production's non-secret variables; secrets are never copied, so set them per
-  environment.
-- A **protected** environment (production by default) accepts deploys and variable edits only
-  from the app owner or an admin.
-- To pin a folder to an environment for every command, add `"environment": "staging"` to
+- **New apps start in `dev`** and have no production until the owner goes live. Apps created
+  before this change keep production as their default and can add a `dev` from the
+  environment switcher on the app's page.
+- **A bare deploy goes to the app's default environment** — `dev` for an app that started
+  there, *even after it goes live*. The deploy prints `Target environment: <name>`; always
+  tell the user which environment it landed in and give them that environment's URL.
+- `--env <name>` picks one explicitly (`bash substrait.sh deploy --env dev`). A deploy aimed
+  straight at production (`--env production`) is **refused (HTTP 409)** for an app that has
+  a `dev` environment — production changes only by promotion.
+- The same folder deploys to either environment — nothing in the code changes. The app can
+  read `SUBSTRAIT_ENV` (`production` | `preview`), `SUBSTRAIT_ENV_NAME` (`dev` | `production`)
+  and `APP_URL` at runtime. Build absolute links from `APP_URL`, never a hard-coded hostname.
+- Each environment has its **own** env vars and secrets: `bash substrait.sh env --env production list`.
+  Going live copies NO variables; adding `dev` to an older app copies production's non-secret
+  ones. Secrets are never copied — set them per environment.
+- To pin a folder to an environment for every command, add `"environment": "production"` to
   `.substrait/config.json`. `--env` always wins.
 
-### Promote
+### Going live / promoting to production — gated, and only when the user asks
 
-Push a build from one environment to another without rebuilding:
+Promotion into production does **not** deploy right away. It starts the production
+**security check** (Layer 1 scans → Layer 2 classification → Layer 3 human review →
+Layer 4) on the build that is live in `dev` at that moment. When the check reaches Layer 4,
+that exact build is promoted automatically (database migrated, images copied, no rebuild).
+If the check does not clear — a scan fails, a reviewer rejects — nothing is deployed; fix
+the issue, deploy to `dev` again, and promote again (a new check starts from Layer 1).
 
 ```bash
-bash substrait.sh deploy promote --to production --from staging
+bash substrait.sh deploy promote --to production   # request it (going live, if no production yet)
+bash substrait.sh deploy promotion                 # where it is: the check's layer, or why it was blocked
 ```
 
-The target's database is migrated from that build's tree first, then its images are copied
-and rolled out. The target must have been deployed at least once. A protected target
-(production by default) accepts promote only from the app owner or an admin.
+- **Never request this on your own initiative.** Confirm with the user first, and tell them
+  that production starts with an **empty** database — nothing is copied from `dev`.
+- A review can take a while. Tell the user; do **not** poll `promotion` in a loop.
+- Anyone with write access to the app can request it; the security check is the gate.
+- The container scan blocks on OS CVEs that have a published fix. `cicd/Dockerfile.backend`
+  already applies `apt-get upgrade` under its `FROM` — keep that line in every Dockerfile
+  you write, in the **final** stage, directly under the `FROM`.
 
 ### Seed SQL
 
-A file at `backend/db/seed.sql` is applied to **non-production** environments only — on the
-first deploy, again only when the file changes, and again on the first deploy after a database
-reset. Production is never seeded. Use it for test data, demo accounts, or lookup tables that
-staging needs but production fills from real sources.
+`backend/db/seed.sql` (optional) gives a **non-production** database starter rows. It runs
+after the Flyway migrations: on the environment's first deploy, again whenever the file
+changes, and again after a database reset. **Production is never seeded**, so the app must
+work with no rows. Write it to be re-runnable (`INSERT IGNORE` or
+`ON DUPLICATE KEY UPDATE` on OceanBase), keep schema changes in `V__` migrations, never in
+the seed, and never put real data in it — the file is committed.
 
 ## `bash substrait.sh check`
 

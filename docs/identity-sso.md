@@ -1,6 +1,9 @@
 # Knowing who the user is
 
-With Google SSO on, the platform injects `X-Forwarded-Email` and `X-Forwarded-User` headers
+The `dev` environment is always behind Ninja Van sign-in, so these headers are always present
+there. In `production`, they are present only when Google SSO is on (the Access tab).
+
+With sign-in on, the platform injects `X-Forwarded-Email` and `X-Forwarded-User` headers
 into every backend request. **Never build a login page, OAuth flow or session handling** —
 just read the header:
 

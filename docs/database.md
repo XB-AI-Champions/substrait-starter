@@ -41,8 +41,23 @@ ever lands it leaves a failed row in Flyway history that makes *every later depl
 - Never add a column and its foreign key in one `ALTER TABLE` — split into two statements.
 - Never use a self-referencing foreign key with `ON DELETE CASCADE`.
 
-If a migration has already failed, fixing the SQL is not enough: the user must go to the
-portal → the app's **Database** tab → **Repair migration history** first.
+If a migration has already failed, fixing the SQL is not enough. In this order:
+
+1. **The user repairs first:** portal → the app's **Database** tab → **Repair migration
+   history** (owner or admin). Pushing a fix before this just half-applies it again.
+2. **Undo what the failed run left behind — in that database, not in the file.** DDL
+   auto-commits, so tables it created, columns it added and columns it dropped are still
+   applied. The banner lists leftover tables; it does NOT list added or dropped columns —
+   check those against the file.
+3. **Fix only the statement that failed.** Keep every other statement in the file.
+4. Commit, push, deploy.
+
+**Never trim a migration to fit one database** (e.g. deleting an `ADD COLUMN` the failed
+attempt already applied). Every app starts in `dev`, and every new environment — including
+production when the app goes live — runs the migrations from V1 on an empty database. A
+trimmed file fails there. And once a migration has succeeded in ANY environment, never edit
+it again — that breaks the environment's next deploy (`Migration checksum mismatch`); add a
+new `V__` file instead.
 
 ## No database connected? Use temporary memory
 
