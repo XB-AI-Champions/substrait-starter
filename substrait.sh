@@ -5,7 +5,8 @@
 #   bash substrait.sh doctor    check this machine and this project, change nothing
 #   bash substrait.sh check     audit the project against Substrait's deploy contract
 #   bash substrait.sh link      authorise this machine (opens your browser)
-#   bash substrait.sh deploy    build and ship, streaming the log
+#   bash substrait.sh deploy    build and ship, streaming the log; returns once the app is live
+#   bash substrait.sh security  Dev security findings that block going live (status|findings|submit-fp)
 #   bash substrait.sh env ...   manage the app's env vars and secrets
 #   bash substrait.sh library   browse the internal API catalogue (needs the account link)
 #   bash substrait.sh logs      read the deployed app's runtime logs (needs the account link)
@@ -275,6 +276,47 @@ update_scaffold() {
   echo "Run 'git diff' to review, then commit when ready."
 }
 
+# ── deploy: return as soon as the app is live ─────────────────────────────────
+# Since plugin v2026.10.25, a --watch deploy to a non-production environment (dev) keeps
+# running for up to 10 more minutes AFTER the app is live, waiting for the Dev security
+# scans to print a go-live verdict. That verdict is advisory, but editor runners time out
+# long before 10 minutes and report a failure for a deploy that succeeded. So stop at the
+# plugin's "✅ Live:" line (its own message says interrupting the wait is safe) and leave
+# the verdict to `bash substrait.sh security status`.
+# SUBSTRAIT_WAIT_FOR_SCANS=1 keeps the plugin's full behaviour.
+deploy_until_live() {
+  if [ "${SUBSTRAIT_WAIT_FOR_SCANS:-0}" = "1" ]; then
+    bash "$SCRIPTS/substrait-deploy.sh" --watch "$@"; return $?
+  fi
+  local out pid shown=0 total live=0 rc
+  out="$(mktemp)" || { bash "$SCRIPTS/substrait-deploy.sh" --watch "$@"; return $?; }
+  bash "$SCRIPTS/substrait-deploy.sh" --watch "$@" > "$out" 2>&1 &
+  pid=$!
+  while :; do
+    total="$(wc -l < "$out" | tr -d ' ')"
+    if [ "$total" -gt "$shown" ]; then
+      sed -n "$((shown + 1)),${total}p" "$out" | LC_ALL=C grep -vF "Dev security scans (up to 10 min"
+      shown=$total
+    fi
+    if LC_ALL=C grep -qF '✅ Live: https://' "$out"; then live=1; break; fi
+    kill -0 "$pid" 2>/dev/null || break
+    sleep 2
+  done
+  if [ "$live" -eq 1 ]; then
+    sleep 1   # let the Live line finish writing
+    kill "$pid" 2>/dev/null; wait "$pid" 2>/dev/null
+    sed -n "$((shown + 1)),\$p" "$out" | LC_ALL=C grep -vF "Dev security scans (up to 10 min"
+    rm -f "$out"
+    echo "Deploy finished — the app is live. Security scans continue on Substrait's side;"
+    echo "'bash substrait.sh security status' shows whether anything blocks going live."
+    return 0
+  fi
+  wait "$pid"; rc=$?
+  sed -n "$((shown + 1)),\$p" "$out"
+  rm -f "$out"
+  return $rc
+}
+
 cmd="${1:-}"; shift 2>/dev/null || true
 
 # ── Guard: refuse to deploy/check from the shared starter repo ──────────────
@@ -310,11 +352,12 @@ case "$cmd" in
   link)   fetch_tools
           if [ $# -eq 0 ]; then set -- account; fi
           bash "$SCRIPTS/substrait-link.sh" "$@" ;;
-  deploy) _guard_starter; fetch_tools; bash "$SCRIPTS/substrait-deploy.sh" --watch "$@" ;;
+  deploy) _guard_starter; fetch_tools; deploy_until_live "$@" ;;
+  security) fetch_tools; bash "$SCRIPTS/substrait-security.sh" "$@" ;;
   env)    fetch_tools; bash "$SCRIPTS/substrait-env.sh" "$@" ;;
   library) fetch_tools; bash "$SCRIPTS/substrait-library.sh" "$@" ;;
   logs)   fetch_tools; bash "$SCRIPTS/substrait-logs.sh" "$@" ;;
   logout) fetch_tools; bash "$SCRIPTS/substrait-link.sh" logout "$@" ;;
   update) update_scaffold ;;
-  *) echo "usage: bash substrait.sh {doctor|check|link|deploy|env|library|logs|logout|update}" >&2; exit 2 ;;
+  *) echo "usage: bash substrait.sh {doctor|check|link|deploy|security|env|library|logs|logout|update}" >&2; exit 2 ;;
 esac

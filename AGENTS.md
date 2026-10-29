@@ -66,6 +66,7 @@ from the starter repo — it never touches the app's code or config.
 | Build user-identity features | `docs/identity-sso.md` |
 | Link this project to Substrait | `docs/linking.md` |
 | Deploy (commit → push → deploy), environments, promote | `docs/deploying.md` |
+| Fix security findings that block going live | `docs/security.md` |
 | Add a frontend | `docs/frontend.md` |
 | Run the app locally for testing | `docs/running-locally.md` |
 | Create a GitHub repository | `docs/github-repo-creation.md` |
@@ -135,6 +136,11 @@ bash substrait.sh deploy
 ```
 
 **Keep `openapi.json` current** — update it whenever you add, remove, or rename an API route.
+
+**The deploy returns as soon as the app is live** (`✅ Live: https://…`). That line means
+success — report the URL. Substrait's security scans keep running afterwards; they never
+undo a deploy. Only if the user asks whether the app can go live, or a promotion is refused
+for blocking findings, run `bash substrait.sh security status` and follow `docs/security.md`.
 
 **Environments — `dev` and `production` only.** A NEW app starts in `dev`
 (`https://<slug>--dev.ninjavan.apps.substrait.build`, always behind Ninja Van sign-in) and
@@ -208,6 +214,7 @@ do not exist here. Translate them:
 | `/substrait:init` | not applicable — this project is already set up |
 | `/substrait:logs` | `bash substrait.sh logs` |
 | `/substrait:logout` | `bash substrait.sh logout` |
+| `/substrait:fix` | follow `docs/security.md` (uses `bash substrait.sh security`) |
 | "update the starter files" | `bash substrait.sh update` |
 
 ---

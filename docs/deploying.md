@@ -159,6 +159,15 @@ bash substrait.sh deploy promotion                 # where it is: the check's la
   that production starts with an **empty** database — nothing is copied from `dev`.
 - A review can take a while. Tell the user; do **not** poll `promotion` in a loop.
 - Anyone with write access to the app can request it; the security check is the gate.
+- **The promotion is refused up front** (nothing starts) while `dev` is not clean: it still
+  has blocking security findings, a `dev` scan is still running (wait, then promote again),
+  or a scan didn't complete (the user retries it on the app's **Security** tab). If the
+  refusal says to run `/substrait:fix`, follow `docs/security.md` instead.
+- **Every deploy to `dev` is scanned automatically.** `bash substrait.sh deploy` returns as
+  soon as the app is live and does not wait for the scans (the plugin would wait up to 10
+  minutes, longer than editor runners allow). `bash substrait.sh security status` shows the
+  result at any time. To wait for the verdict in a real terminal instead:
+  `SUBSTRAIT_WAIT_FOR_SCANS=1 bash substrait.sh deploy`.
 - The container scan blocks on OS CVEs that have a published fix. `cicd/Dockerfile.backend`
   already applies `apt-get upgrade` under its `FROM` — keep that line in every Dockerfile
   you write, in the **final** stage, directly under the `FROM`.

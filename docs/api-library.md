@@ -88,6 +88,25 @@ What development access is:
 Ask for it early — the owner is a person and may take a day — and keep designing from the spec
 in the meantime. `show internal <slug>` carries `development_access` with your current state.
 
+## Data that isn't in the library — ask for a data set
+
+When what the user needs lives in the data warehouse or Redash but no catalogue entry covers
+it, offer to ask for a data set. Describe it in the user's words — **never SQL**; a curator
+writes and reviews the query:
+
+```bash
+bash substrait.sh library ask-data --title "What to call it" \
+  --question "What the user wants to answer (10+ characters)" \
+  --reason "What they're building, and for whom (10+ characters)" \
+  [--source "a table, Redash query or report they know of"] [--filters "date range, hub, …"]
+bash substrait.sh library data-requests      # where each of their requests stands
+```
+
+A curator publishes it or declines with a reason; the user is emailed either way. The data
+may already exist but be hidden from them (visibility is per data group), in which case the
+curator points them at it. Meanwhile, design against what exists — never invent the data.
+Needs the account link, like every library command.
+
 ## Designing an app from the library
 
 1. `list` the catalogue and shortlist entries relevant to what the user wants to build.
