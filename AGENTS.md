@@ -213,6 +213,8 @@ do not exist here. Translate them:
 | `/substrait:deploy` | `bash substrait.sh deploy` |
 | `/substrait:init` | not applicable — this project is already set up |
 | `/substrait:logs` | `bash substrait.sh logs` |
+| `/substrait:library` | `bash substrait.sh library` (read `docs/api-library.md`) |
+| `/substrait:switch` | not needed — one Substrait login per machine. To check it: `bash substrait.sh link profiles` |
 | `/substrait:logout` | `bash substrait.sh logout` |
 | `/substrait:fix` | follow `docs/security.md` (uses `bash substrait.sh security`) |
 | "update the starter files" | `bash substrait.sh update` |

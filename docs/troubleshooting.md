@@ -7,6 +7,13 @@ the link through `bash substrait.sh link` (never the plugin scripts directly), a
 it once more. Do not ask the user to change editor permission settings; that path has been
 tried and doesn't work reliably.
 
+**"The Substrait profile '…' is not on this machine".** Substrait now saves each login as a
+named *profile* and remembers which one a folder was linked under. This message means that
+login's file is gone from this machine (for example after the tooling folder was
+re-downloaded). Fix: `bash substrait.sh link account` — the browser login recreates the
+profile under the same default name, and the folder works again. Do **not** re-link the
+folder to a different app, and do not pass `--profile` or `--org` unless the user asks.
+
 **First Substrait command seems to hang.** It's downloading the tooling into
 `~/.substrait-tools`. Run it again.
 

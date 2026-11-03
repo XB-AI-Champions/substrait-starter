@@ -90,17 +90,18 @@ Only if the browser flow above was killed or keeps reporting expiry.
 
 **Ask the user to mint the right kind of token.** There are two kinds and only one works:
 
-> In app.substrait.build, use **Access tokens in the left sidebar** — *not* the Access
-> tokens section inside an app. Click **Create token**, give it any name, and copy what it
-> shows you. It's only shown once.
+> In app.substrait.build, open your **account menu → Personal tokens** (older versions of
+> the portal call it **Access tokens** in the left sidebar) — *not* the token section inside
+> an app. Click **Create token**, give it any name, and copy what it shows you. It's only
+> shown once.
 
 | Where they get it | Starts with | Scope |
 |---|---|---|
-| Left sidebar → **Access tokens** ✅ | `sbt_` | Every app they own — this is the one you need |
+| Account menu → **Personal tokens** (older portal: left sidebar → Access tokens) ✅ | `sbt_` | Every app they own — this is the one you need |
 | An app's **Deploy** tab ❌ | `sbd_` | That single app only — `save-account` rejects it |
 
 **Check the prefix.** If it starts with `sbd_`, tell them they took it from the app's Deploy
-tab and need the sidebar page instead.
+tab and need the Personal tokens page instead.
 
 **Have them put it in a file, not in this chat:**
 
