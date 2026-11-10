@@ -14,6 +14,13 @@ re-downloaded). Fix: `bash substrait.sh link account` — the browser login recr
 profile under the same default name, and the folder works again. Do **not** re-link the
 folder to a different app, and do not pass `--profile` or `--org` unless the user asks.
 
+**A deploy ends with a `WHAT TO DO:` line.** Follow it — it is substrait.sh naming the fix
+for the failure it just saw (sign-in expired, folder not linked, or Substrait unreachable).
+
+**`link status` says "the account token was rejected (HTTP 000)".** HTTP 000 means Substrait
+could not be reached at all — it is not a rejected sign-in. Run `bash substrait.sh link ping`
+and see the "could not reach" entry below.
+
 **First Substrait command seems to hang.** It's downloading the tooling into
 `~/.substrait-tools`. Run it again.
 

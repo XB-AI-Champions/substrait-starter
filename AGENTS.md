@@ -1,6 +1,6 @@
 # AGENTS.md — how to work in this project
 
-## READ THIS FIRST — the five rules that matter most
+## READ THIS FIRST — the six rules that matter most
 
 ## Adding AI or Google features — read the connection file first
 
@@ -43,13 +43,24 @@
    pushing, the user's app will not change and you will have told them it did.
    This means **linking is required, not optional** — read `docs/linking.md` before the
    first deploy.
+6. **Every Substrait action in this folder goes through `bash substrait.sh`.** If
+   Substrait's own Claude plugin is installed, do **not** use its `/substrait:*` commands
+   or skills here, even when they are offered automatically: they save logins under
+   different names and can sign in to the wrong Substrait installation. When Substrait's
+   messages name a slash command, use the *Command translation* table below. When a
+   substrait.sh run prints a line starting `WHAT TO DO:`, that is your next step.
 
 Everything below is detail. The user is not a developer — do the work, then explain it in
 plain language, and never ask them to open a terminal and type.
 
-**If you hit an error or behaviour these docs don't cover**, the starter files may be stale.
-Run `bash substrait.sh update` to pull the latest scaffolding (AGENTS.md, docs/, substrait.sh)
-from the starter repo — it never touches the app's code or config.
+**Deploys keep the starter files current.** At most once a day, `bash substrait.sh deploy`
+checks the starter repo. If it has changed, the deploy replaces the starter's own files
+(this file, the docs, `substrait.sh` and similar — never the app's code, README or config),
+commits and pushes them as "Update starter files from XB-AI-Champions/substrait-starter",
+then carries on with the deploy. That is expected; never revert it. A starter file that was
+edited in this folder is kept, and the new version is saved in `.substrait/starter-latest/`
+for you to merge by hand. **If you hit an error these docs don't cover**, run
+`bash substrait.sh update` to fetch the newest starter files immediately.
 
 ---
 
