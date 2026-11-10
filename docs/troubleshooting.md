@@ -35,8 +35,15 @@ first. Find the other copy — do **not** force-push, it will destroy their work
 command mid-wait, but **check the machine clock too** — if it's more than a few minutes off,
 the token really is rejected as expired, and no amount of retrying helps.
 
-**Everything fails with "could not reach https://api.substrait.build".** Check whether they
-need to be on the company VPN. Never work around it by disabling certificate checks.
+**Everything fails with "could not reach https://api.substrait.build".** That address was
+retired in Nov 2026 — Ninja Van's Substrait is now `https://api.ninjavan.substrait.build`
+(portal: app.ninjavan.substrait.build). Run `bash substrait.sh update` to get the current
+`substrait.sh`; its next run moves any saved login to the new address automatically. If a
+login still fails after that, run `bash substrait.sh link account` to sign in again.
+
+**Everything fails with "could not reach https://api.ninjavan.substrait.build".** Check
+whether they need to be on the company VPN. Never work around it by disabling certificate
+checks.
 
 **`echo: write error: Bad file descriptor` from any `substrait.sh` command.** The IDE runner
 closed the output pipe before the script finished. The command **still ran** — the output

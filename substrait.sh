@@ -75,7 +75,25 @@ fi
 # never from $SUBSTRAIT_PORTAL_URL. So read the saved address first and export the hosted
 # default ONLY when nothing is saved yet (a machine that has never linked). Logins get the
 # address passed explicitly (see `link` below).
-_SUBSTRAIT_DEFAULT_PORTAL="https://api.substrait.build"
+# Ninja Van's workspace lives on its own Substrait installation (portal
+# app.ninjavan.substrait.build). The old shared address api.substrait.build stopped answering
+# in Nov 2026, so the plugin's own "follow the new address" step can never run for logins
+# saved against it (it needs a successful call to the old host first).
+_SUBSTRAIT_DEFAULT_PORTAL="https://api.ninjavan.substrait.build"
+_SUBSTRAIT_RETIRED_PORTAL="https://api.substrait.build"
+# Move saved logins and links off the retired address, in place: same files, same profile
+# names, folder pins untouched. Only an exact match of the old value is rewritten.
+_heal_retired_portal() {
+  local f gc="${SUBSTRAIT_GLOBAL_CONFIG:-$HOME/.substrait/config.json}" moved=0
+  for f in .substrait/config.json "$gc" "$(dirname "$gc")"/profiles/*.json; do
+    [ -f "$f" ] || continue
+    grep -qE "\"portal_url\"[[:space:]]*:[[:space:]]*\"${_SUBSTRAIT_RETIRED_PORTAL//./\\.}/?\"" "$f" 2>/dev/null || continue
+    sed -i -E "s#(\"portal_url\"[[:space:]]*:[[:space:]]*\")${_SUBSTRAIT_RETIRED_PORTAL//./\\.}/?\"#\1${_SUBSTRAIT_DEFAULT_PORTAL}\"#" "$f" 2>/dev/null && moved=1
+  done
+  [ "$moved" -eq 1 ] && echo "Note: moved your saved Substrait login from $_SUBSTRAIT_RETIRED_PORTAL to $_SUBSTRAIT_DEFAULT_PORTAL (the old address no longer answers)."
+  return 0
+}
+_heal_retired_portal
 _saved_portal() {
   local f gc="${SUBSTRAIT_GLOBAL_CONFIG:-$HOME/.substrait/config.json}" v
   for f in .substrait/config.json "$gc" "$(dirname "$gc")"/profiles/*.json; do
@@ -349,7 +367,14 @@ case "$cmd" in
           # A login needs the portal address; pass the saved one (else the hosted default)
           # unless the caller gave --portal-url.
           case "$1" in account|save-account)
-            case " $* " in *" --portal-url"*) ;; *) set -- "$@" --portal-url "$SUBSTRAIT_LOGIN_PORTAL" ;; esac ;;
+            case " $* " in *" --portal-url"*) ;; *) set -- "$@" --portal-url "$SUBSTRAIT_LOGIN_PORTAL" ;; esac
+            # Champions have one login. Signing in again must REPLACE it under the same
+            # profile name, or folders pinned to the old name keep using the old token.
+            case " $* " in *" --profile"*) ;; *)
+              _prof="$(sed -n 's/.*"profile"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' .substrait/config.json 2>/dev/null | head -1)"
+              [ -n "$_prof" ] || _prof="$(sed -n 's/.*"profile"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "${SUBSTRAIT_GLOBAL_CONFIG:-$HOME/.substrait/config.json}" 2>/dev/null | head -1)"
+              [ -n "$_prof" ] && set -- "$@" --profile "$_prof" ;;
+            esac ;;
           esac
           bash "$SCRIPTS/substrait-link.sh" "$@" ;;
   deploy) _guard_starter; fetch_tools; deploy_until_live "$@" ;;

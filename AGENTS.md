@@ -214,6 +214,8 @@ do not exist here. Translate them:
 | `/substrait:init` | not applicable — this project is already set up |
 | `/substrait:logs` | `bash substrait.sh logs` |
 | `/substrait:library` | `bash substrait.sh library` (read `docs/api-library.md`) |
+| `/substrait:ping` | `bash substrait.sh link ping` (checks every saved login; moves one whose address changed) |
+| `/substrait:slate` | not used in this programme |
 | `/substrait:switch` | not needed — one Substrait login per machine. To check it: `bash substrait.sh link profiles` |
 | `/substrait:logout` | `bash substrait.sh logout` |
 | `/substrait:fix` | follow `docs/security.md` (uses `bash substrait.sh security`) |
