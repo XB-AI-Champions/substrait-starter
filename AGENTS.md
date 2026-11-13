@@ -154,7 +154,7 @@ undo a deploy. Only if the user asks whether the app can go live, or a promotion
 for blocking findings, run `bash substrait.sh security status` and follow `docs/security.md`.
 
 **Environments — `dev` and `production` only.** A NEW app starts in `dev`
-(`https://<slug>--dev.ninjavan.apps.substrait.build`, always behind Ninja Van sign-in) and
+(`https://<slug>--dev.ninjavan.apps.substrait.build`, behind Ninja Van sign-in unless the app's Sharing tab turned it off) and
 has no production until it goes live. A bare `bash substrait.sh deploy` goes to the app's
 default environment — read the `Target environment:` line it prints and tell the user which
 one it was, and give them THAT environment's URL. Older apps default to production.

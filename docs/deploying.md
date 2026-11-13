@@ -119,7 +119,7 @@ separate instance with its own database, bucket, URL, variables and secrets.
 | | `dev` | `production` |
 |---|---|---|
 | URL | `https://<slug>--dev.ninjavan.apps.substrait.build` | `https://<slug>.ninjavan.apps.substrait.build` |
-| Access | Always behind Ninja Van sign-in — can never be made public | Set on the app's Access tab |
+| Access | Behind Ninja Van sign-in by default; if the organisation allows it, the app's Sharing tab can turn that off — check there before putting anything sensitive on `dev` | Set on the app's Access tab |
 | Created | When the app is created (new apps) | When the app **goes live** |
 | Data | Can be seeded from `backend/db/seed.sql` | Starts EMPTY; never seeded |
 
